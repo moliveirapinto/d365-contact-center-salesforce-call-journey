@@ -22,6 +22,10 @@ This project connects the two, so every phone call shows up in Salesforce with i
 
 ![Contact Center Call record with the Call Journey card, Play recording and Transcript buttons, and call details](docs/images/salesforce-call-journey.png)
 
+**3. Play the recording without leaving Salesforce.** The pop-up shows the Dynamics 365 conversation: audio player with waveform, quality score trendline, transcript and call metrics. On the right is the **AI quality evaluation**: plan score, AI summary, suggested actions and every quality indicator with its reasoning.
+
+![Call recording pop-up inside Salesforce showing the Dynamics 365 recording player, quality score trendline and the AI quality evaluation side pane](docs/images/salesforce-recording-popup.png)
+
 ---
 
 ## Table of contents
