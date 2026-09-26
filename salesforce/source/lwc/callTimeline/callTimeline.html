@@ -1,0 +1,80 @@
+<template>
+    <article class="card">
+        <header class="card-header">
+            <div class="header-icon">
+                <lightning-icon icon-name="utility:call" size="x-small" variant="inverse" alternative-text="Calls"></lightning-icon>
+            </div>
+            <div class="header-text">
+                <h2 class="header-title">{cardTitle}</h2>
+                <p class="header-sub">{cardSubtitle}</p>
+            </div>
+            <span class="count-pill" lwc:if={showCount}>{callCountLabel}</span>
+            <lightning-button-icon icon-name="utility:refresh" variant="bare" alternative-text="Refresh" title="Refresh" onclick={handleRefresh} class="refresh"></lightning-button-icon>
+        </header>
+
+        <template lwc:if={hasCalls}>
+            <ol class="calls">
+                <template for:each={calls} for:item="c">
+                    <li key={c.id} class="call">
+                        <div class="date-tile">
+                            <span class="dt-month">{c.month}</span>
+                            <span class="dt-day">{c.day}</span>
+                            <span class="dt-weekday">{c.weekday}</span>
+                        </div>
+
+                        <div class="call-body">
+                            <div class="call-top">
+                                <div>
+                                    <div class="call-title">
+                                        <lightning-icon icon-name="utility:incoming_call" size="xx-small" class="title-icon"></lightning-icon>
+                                        Inbound voice call
+                                        <span class={c.statusClass}><span class="dot"></span>{c.statusLabel}</span>
+                                    </div>
+                                    <div class="call-when">
+                                        <lightning-formatted-date-time value={c.received} weekday="long" month="long" day="numeric" year="numeric" hour="numeric" minute="2-digit" time-zone-name="short"></lightning-formatted-date-time>
+                                        <span class="ago"> · <lightning-relative-date-time value={c.receivedTs}></lightning-relative-date-time></span>
+                                    </div>
+                                </div>
+                                <div class="actions" lwc:if={c.url}>
+                                    <a class="btn btn-primary" href={c.url} onclick={openRecording} data-id={c.id} data-mode="recording" title="Play the call recording">
+                                        <lightning-icon icon-name="utility:play" size="xx-small" variant="inverse"></lightning-icon>
+                                        <span>Play recording</span>
+                                    </a>
+                                    <a class="btn btn-ghost" href={c.url} onclick={openRecording} data-id={c.id} data-mode="transcript" title="View the call transcript">
+                                        <lightning-icon icon-name="utility:quote" size="xx-small"></lightning-icon>
+                                        <span>Transcript</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <ol class="journey">
+                                <template for:each={c.steps} for:item="s">
+                                    <li key={s.key} class={s.cls}>
+                                        <span class="step-dot"><lightning-icon icon-name={s.icon} size="xx-small" variant="inverse"></lightning-icon></span>
+                                        <span class="step-label">{s.label}</span>
+                                        <span class="step-meta">{s.meta}</span>
+                                    </li>
+                                </template>
+                            </ol>
+
+                            <div class="chips">
+                                <span class="chip"><lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>Total {c.total}</span>
+                                <span class="chip" lwc:if={c.talk}><lightning-icon icon-name="utility:voicemail_drop" size="xx-small"></lightning-icon>Talk {c.talk}</span>
+                                <span class={c.sentimentClass} lwc:if={c.sentiment}>{c.sentimentEmoji} {c.sentiment}</span>
+                                <span class="chip" lwc:if={c.phone}><lightning-icon icon-name="utility:phone_portrait" size="xx-small"></lightning-icon>{c.phone}</span>
+                                <a class="chip chip-link" lwc:if={showDetailsLink} href={c.recordUrl} onclick={openCall} data-id={c.id} title={c.name}>Call details</a>
+                            </div>
+                        </div>
+                    </li>
+                </template>
+            </ol>
+        </template>
+
+        <template lwc:elseif={loaded}>
+            <div class="empty">
+                <lightning-icon icon-name="utility:call" size="small"></lightning-icon>
+                <p>No contact center calls linked to this record yet.</p>
+            </div>
+        </template>
+    </article>
+</template>

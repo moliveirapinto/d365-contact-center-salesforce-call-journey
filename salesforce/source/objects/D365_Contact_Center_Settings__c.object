@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <description>Where your Dynamics 365 Contact Center lives. Used to build the "Play recording" / "Transcript" links.</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>Org_Url__c</fullName>
+        <description>Your Dynamics 365 environment URL, e.g. https://contoso.crm.dynamics.com</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Example: https://contoso.crm.dynamics.com (no trailing slash needed)</inlineHelpText>
+        <label>Dynamics 365 URL</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>App_Id__c</fullName>
+        <description>Optional. The app ID of the "Contact Center Call Review" model-driven app installed by the Dynamics 365 solution.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Optional. Paste the appid of the Contact Center Call Review app (from its URL). Leave blank to use your default app.</inlineHelpText>
+        <label>Call Review App ID</label>
+        <length>36</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>D365 Contact Center Settings</label>
+    <visibility>Public</visibility>
+</CustomObject>

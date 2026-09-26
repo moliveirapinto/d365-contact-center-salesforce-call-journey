@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "D365 Contact Center Helper for Salesforce",
+  "version": "1.2.0",
+  "description": "Enlarges the D365 Contact Center (Open CTI) panel in Salesforce Lightning, clears stale D365 sign-in nonce cookies that cause 'HTTP 400 - Request Too Long', and clears the D365 app cache at browser start so D365 links open quickly.",
+  "permissions": ["cookies", "alarms", "storage", "browsingData"],
+  "host_permissions": ["https://*.dynamics.com/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://*.lightning.force.com/*"],
+      "css": ["styles.css"],
+      "run_at": "document_start"
+    }
+  ]
+}

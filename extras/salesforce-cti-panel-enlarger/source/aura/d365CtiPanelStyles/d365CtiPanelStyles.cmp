@@ -1,0 +1,3 @@
+<aura:component implements="flexipage:availableForAllPageTypes,lightning:backgroundUtilityItem" description="Invisible background utility item that loads org-wide demo CSS (enlarges the Dynamics 365 Contact Center panel).">
+    <ltng:require styles="{!$Resource.D365_CTI_Panel_CSS}" />
+</aura:component>
