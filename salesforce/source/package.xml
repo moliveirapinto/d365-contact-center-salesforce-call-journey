@@ -5,6 +5,10 @@
         <name>CspTrustedSite</name>
     </types>
     <types>
+        <members>Case.D365CC_Case_Highlights</members>
+        <name>CompactLayout</name>
+    </types>
+    <types>
         <members>Case.D365_Call_Recording__c</members>
         <members>Case.D365_Conversation_Id__c</members>
         <name>CustomField</name>

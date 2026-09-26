@@ -169,7 +169,8 @@ You need:
 |---|---|---|
 | Custom object | `Contact_Center_Call__c` | One record per call (29 custom fields, record page, layout, tab, compact layout) |
 | Custom fields on Case | `D365_Conversation_Id__c`, `D365_Call_Recording__c` | The link between the Case and the D365 conversation |
-| Custom setting | `D365_Contact_Center_Settings__c` | Where you enter **your** Dynamics 365 URL and app ID (nothing is hard-coded) |
+| Compact layout on Case | `D365CC_Case_Highlights` | Optional: shows the recording link in the Case header |
+| Custom setting | `D365_Contact_Center_Settings__c` | Where you enter **your** Dynamics 365 URL, app ID and time zone (nothing is hard-coded) |
 | Flow | `D365CC_Create_Call_From_Case` | Creates the call record when the IVR creates a Case (runs in the background; it can never block Case creation) |
 | Lightning components | `callTimeline`, `callRecordingModal` | The Call Journey card and the recording pop-up |
 | Lightning page | `Contact_Center_Call_Page` | Record page for calls: journey card + related Case + details |
@@ -191,7 +192,7 @@ You need:
 
 | I want to… | Do this |
 |---|---|
-| **Change the time zone in call titles** (default: US Eastern, *"… 9:24 PM ET"*) | Salesforce: edit flow `D365CC_Create_Call_From_Case` → formula `fTitle` (the `-4`/`-5` hour offsets and `" ET"`). Dynamics 365: edit the sync flow → *Build Salesforce payload* → replace `Eastern Standard Time` and `' ET'` in `Name` and `Call_Received_Label__c`. |
+| **Change the time zone in call titles** | Setup → Custom Settings → **D365 Contact Center Settings** → *Time Zone Offset*, *Daylight Saving Rule*, *Time Zone Label* ([examples](docs/1-install-salesforce.md#13-tell-salesforce-where-your-dynamics-365-is-and-your-time-zone)). The Call Journey card always uses each user's own Salesforce time zone and locale. |
 | **Show calls on the Case or Contact page** | Lightning App Builder → drag **Call Timeline (D365 Contact Center)** onto the Case or Contact record page. It lists all calls for that record. |
 | **Use a different D365 app in the pop-up** | Put that app's ID in the Salesforce custom setting (**Call Review App ID**), or leave it blank to use the user's default app. |
 | **Rename labels / fields** | Everything is unmanaged, so edit it freely in Setup. |
@@ -210,6 +211,22 @@ The full list is in [docs/4-test-and-troubleshoot.md](docs/4-test-and-troublesho
 | No call record created | The Case has no `D365 Conversation ID`: check Step 3. Also check the running user has the permission set. |
 | Call record never shows metrics / quality | The sync flow is off or its Salesforce connection user lacks the permission set (Step 2.2). |
 | D365 pages stuck on the loading spinner (often right after publishing customizations) | Clear the site data for `*.crm.dynamics.com` (keeps you signed in if you keep cookies) and reload. |
+| Pop-up blocked by *"frame-ancestors"* | Your Dynamics 365 environment enforces a content security policy. In the Power Platform admin center, add your Salesforce domains (`https://*.lightning.force.com`, `https://*.my.salesforce.com`) to its allowed frame ancestors. |
+
+### Nothing is hard-coded
+
+Every organization-specific value is entered by you after installing:
+
+| Value | Where you set it |
+|---|---|
+| Dynamics 365 environment URL (any region) | Salesforce → Custom Settings → D365 Contact Center Settings |
+| Which D365 app opens in the pop-up | same place (*Call Review App ID*) |
+| Time zone of call titles (offset, daylight saving, label) | same place |
+| Time zone & language of dates on the Call Journey card | each Salesforce user's personal settings (automatic) |
+| Salesforce org used by the sync flow | the Salesforce **connection** you pick when importing the D365 solution |
+| Dataverse environment | wherever you import the solution |
+| Which Salesforce user the IVR uses | your Copilot Studio agent's Salesforce connection |
+| Trusted URL for the pop-up | `https://*.dynamics.com`, which covers every D365 environment and region |
 
 ### Why the evaluation pane fix is needed
 

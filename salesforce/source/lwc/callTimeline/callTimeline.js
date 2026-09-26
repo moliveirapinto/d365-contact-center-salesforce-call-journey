@@ -4,6 +4,8 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 import { NavigationMixin } from 'lightning/navigation';
 import CallRecordingModal from 'c/callRecordingModal';
+import LOCALE from '@salesforce/i18n/locale';
+import TIME_ZONE from '@salesforce/i18n/timeZone';
 
 const O = 'Contact_Center_Call__c';
 const FIELDS = [
@@ -24,7 +26,7 @@ const secs = (n) => {
     const v = Math.round(Number(n));
     return v < 60 ? `${v}s` : `${Math.floor(v / 60)}m ${String(v % 60).padStart(2, '0')}s`;
 };
-const time = (iso) => (iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '');
+const time = (iso) => (iso ? new Date(iso).toLocaleTimeString(LOCALE, { timeZone: TIME_ZONE, hour: 'numeric', minute: '2-digit' }) : '');
 
 // D365 Quality Evaluation bands: >= 71 Good, >= 41 Fair, else Poor.
 const scoreBand = (s) => (s >= 71 ? ['Good', 'good', '#2e844a'] : s >= 41 ? ['Fair', 'fair', '#d97706'] : ['Poor', 'poor', '#ba0517']);
@@ -214,9 +216,9 @@ export default class CallTimeline extends NavigationMixin(LightningElement) {
             recordUrl: `/lightning/r/${O}/${r.id}/view`,
             received,
             receivedTs: received ? Date.parse(received) : null,
-            month: d ? d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '',
-            day: d ? d.getDate() : '',
-            weekday: d ? d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : '',
+            month: d ? d.toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, month: 'short' }).toUpperCase() : '',
+            day: d ? d.toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, day: 'numeric' }) : '',
+            weekday: d ? d.toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, weekday: 'short' }).toUpperCase() : '',
             statusLabel: done ? 'Completed' : 'Live',
             statusClass: done ? 'status status-done' : 'status status-live',
             steps,
@@ -239,7 +241,7 @@ export default class CallTimeline extends NavigationMixin(LightningElement) {
         const c = this.calls.find((x) => x.id === id);
         if (!c || !c.url) return;
         const when = c.received
-            ? new Date(c.received).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+            ? new Date(c.received).toLocaleString(LOCALE, { timeZone: TIME_ZONE, weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
             : '';
         CallRecordingModal.open({
             size: 'full',

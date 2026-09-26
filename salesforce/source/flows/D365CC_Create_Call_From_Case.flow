@@ -36,11 +36,47 @@
             <label>Exists</label>
         </rules>
     </decisions>
-    <description>When the Copilot Studio IVR creates a case carrying a D365 conversation ID, create the matching Contact Center Call record. Runs asynchronously after commit so it can never block or roll back case creation; skips if the call already exists.</description>
+    <description>When the Copilot Studio IVR creates a case carrying a D365 conversation ID, create the matching Contact Center Call record. The time zone of the title comes from Setup > Custom Settings > D365 Contact Center Settings. Runs asynchronously after commit so it can never block or roll back case creation; skips if the call already exists.</description>
+    <formulas>
+        <name>fOffset</name>
+        <dataType>Number</dataType>
+        <scale>2</scale>
+        <expression>BLANKVALUE({!$Setup.D365_Contact_Center_Settings__c.Time_Zone_Offset__c}, 0)</expression>
+    </formulas>
+    <formulas>
+        <name>fDst</name>
+        <dataType>Number</dataType>
+        <scale>2</scale>
+        <expression>IF(UPPER(TRIM({!$Setup.D365_Contact_Center_Settings__c.Daylight_Saving_Rule__c})) = &quot;US&quot;,
+  IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),3,8) + MOD(8 - WEEKDAY(DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),3,8)), 7))) &amp; &quot; 00:00:00&quot;) + (2 - {!fOffset}) / 24, {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),11,1) + MOD(8 - WEEKDAY(DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),11,1)), 7))) &amp; &quot; 00:00:00&quot;) + (1 - {!fOffset}) / 24), 1, 0),
+  IF(UPPER(TRIM({!$Setup.D365_Contact_Center_Settings__c.Daylight_Saving_Rule__c})) = &quot;EU&quot;,
+    IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),3,31) - MOD(WEEKDAY(DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),3,31)) - 1, 7))) &amp; &quot; 01:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),10,31) - MOD(WEEKDAY(DATE(VALUE(LEFT(TEXT({!$Record.CreatedDate}), 4)),10,31)) - 1, 7))) &amp; &quot; 01:00:00&quot;)), 1, 0),
+    0))</expression>
+    </formulas>
+    <formulas>
+        <name>fLocal</name>
+        <dataType>DateTime</dataType>
+        <expression>{!$Record.CreatedDate} + ({!fOffset} + {!fDst}) / 24</expression>
+    </formulas>
+    <formulas>
+        <name>fLocalDate</name>
+        <dataType>Date</dataType>
+        <expression>DATE(VALUE(LEFT(TEXT({!fLocal}), 4)), VALUE(MID(TEXT({!fLocal}), 6, 2)), VALUE(MID(TEXT({!fLocal}), 9, 2)))</expression>
+    </formulas>
+    <formulas>
+        <name>fLabel</name>
+        <dataType>String</dataType>
+        <expression>IF(ISBLANK({!$Setup.D365_Contact_Center_Settings__c.Time_Zone_Label__c}), &quot;UTC&quot; &amp; IF({!fOffset} + {!fDst} = 0, &quot;&quot;, IF({!fOffset} + {!fDst} &gt; 0, &quot;+&quot;, &quot;&quot;) &amp; TEXT({!fOffset} + {!fDst})), {!$Setup.D365_Contact_Center_Settings__c.Time_Zone_Label__c})</expression>
+    </formulas>
     <formulas>
         <name>fTitle</name>
         <dataType>String</dataType>
-        <expression>&quot;Phone call received on &quot; &amp; CASE(WEEKDAY(DATEVALUE(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24))),1,&quot;Sun&quot;,2,&quot;Mon&quot;,3,&quot;Tue&quot;,4,&quot;Wed&quot;,5,&quot;Thu&quot;,6,&quot;Fri&quot;,&quot;Sat&quot;) &amp; &quot;, &quot; &amp; CASE(MONTH(DATEVALUE(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24))),1,&quot;Jan&quot;,2,&quot;Feb&quot;,3,&quot;Mar&quot;,4,&quot;Apr&quot;,5,&quot;May&quot;,6,&quot;Jun&quot;,7,&quot;Jul&quot;,8,&quot;Aug&quot;,9,&quot;Sep&quot;,10,&quot;Oct&quot;,11,&quot;Nov&quot;,&quot;Dec&quot;) &amp; &quot; &quot; &amp; TEXT(DAY(DATEVALUE(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24)))) &amp; &quot; · &quot; &amp; TEXT(IF(MOD(VALUE(MID(TEXT(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24)), 12, 2)),12)=0,12,MOD(VALUE(MID(TEXT(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24)), 12, 2)),12))) &amp; &quot;:&quot; &amp; MID(TEXT(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24)), 15, 2) &amp; IF(VALUE(MID(TEXT(({!$Record.CreatedDate} + IF(AND({!$Record.CreatedDate} &gt;= DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),3,8)), 7))) &amp; &quot; 07:00:00&quot;), {!$Record.CreatedDate} &lt; DATETIMEVALUE(TEXT((DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1) + MOD(8 - WEEKDAY(DATE(YEAR(DATEVALUE({!$Record.CreatedDate})),11,1)), 7))) &amp; &quot; 06:00:00&quot;)), -4, -5) / 24)), 12, 2)) &lt; 12, &quot; AM&quot;, &quot; PM&quot;) &amp; &quot; ET&quot;</expression>
+        <expression>&quot;Phone call received on &quot; &amp;
+CASE(WEEKDAY({!fLocalDate}), 1, &quot;Sun&quot;, 2, &quot;Mon&quot;, 3, &quot;Tue&quot;, 4, &quot;Wed&quot;, 5, &quot;Thu&quot;, 6, &quot;Fri&quot;, &quot;Sat&quot;) &amp; &quot;, &quot; &amp;
+CASE(MONTH({!fLocalDate}), 1, &quot;Jan&quot;, 2, &quot;Feb&quot;, 3, &quot;Mar&quot;, 4, &quot;Apr&quot;, 5, &quot;May&quot;, 6, &quot;Jun&quot;, 7, &quot;Jul&quot;, 8, &quot;Aug&quot;, 9, &quot;Sep&quot;, 10, &quot;Oct&quot;, 11, &quot;Nov&quot;, &quot;Dec&quot;) &amp; &quot; &quot; &amp;
+TEXT(DAY({!fLocalDate})) &amp; &quot; · &quot; &amp;
+TEXT(IF(MOD(VALUE(MID(TEXT({!fLocal}), 12, 2)), 12) = 0, 12, MOD(VALUE(MID(TEXT({!fLocal}), 12, 2)), 12))) &amp; &quot;:&quot; &amp; MID(TEXT({!fLocal}), 15, 2) &amp;
+IF(VALUE(MID(TEXT({!fLocal}), 12, 2)) &lt; 12, &quot; AM&quot;, &quot; PM&quot;) &amp; &quot; &quot; &amp; {!fLabel}</expression>
     </formulas>
     <interviewLabel>D365CC Create Call {!$Flow.CurrentDateTime}</interviewLabel>
     <label>D365 Contact Center - Create Call from IVR case</label>

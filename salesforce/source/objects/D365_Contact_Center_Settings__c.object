@@ -27,6 +27,43 @@
         <type>Text</type>
         <unique>false</unique>
     </fields>
+    <fields>
+        <fullName>Time_Zone_Offset__c</fullName>
+        <description>Hours from UTC used for call titles ("Phone call received on Fri, Sep 25 · 9:24 PM ET"). Standard time, e.g. -5 for US Eastern, -8 for US Pacific, 0 for London, 1 for Paris, 5.5 for India.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Standard-time offset from UTC in hours. Examples: -5 US Eastern, -6 US Central, -8 US Pacific, -3 Brazil, 0 UK, 1 Central Europe, 5.5 India. Blank = UTC.</inlineHelpText>
+        <label>Time Zone Offset (hours)</label>
+        <precision>4</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Daylight_Saving_Rule__c</fullName>
+        <description>Which daylight saving rule applies to call titles: US (second Sunday of March to first Sunday of November), EU (last Sunday of March to last Sunday of October), or blank for none.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Type US, EU, or leave blank if your time zone has no daylight saving time.</inlineHelpText>
+        <label>Daylight Saving Rule</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Time_Zone_Label__c</fullName>
+        <description>Short label shown at the end of call titles, e.g. ET, PT, CET, BRT. Blank shows the UTC offset.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Short label shown at the end of call titles, e.g. ET, PT, GMT, CET. Blank shows UTC±offset.</inlineHelpText>
+        <label>Time Zone Label</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
     <label>D365 Contact Center Settings</label>
     <visibility>Public</visibility>
 </CustomObject>

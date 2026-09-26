@@ -63,4 +63,8 @@ Add one before the transfer:
 2. Sign in with a Salesforce user that has the **D365 Contact Center Call Access** permission set.
 3. **Salesforce Object Type:** `Case`. Map at least *Subject*, *Origin* = `Phone`, *Supplied Phone* = `System.Activity.From.Name` (the caller's number), and **D365 Conversation ID** as above.
 
+### Optional: link the caller to a Contact
+
+The Salesforce call record copies the **Contact** from the Case, which fills the *Customer* field and puts the call on the Contact's page. If your agent already knows who is calling (for example, it looked the caller up by phone number with the Salesforce connector's **Get records** action on *Contact*), also map **Contact ID** in the Create record action. If it doesn't, the call record is still created; it just has no Customer.
+
 ✅ **Copilot Studio is done.** Continue with [Step 4 — Test](4-test-and-troubleshoot.md).

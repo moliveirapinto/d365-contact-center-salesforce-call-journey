@@ -41,7 +41,16 @@
 | No *Play recording* button | The **D365 Contact Center Settings** → *Dynamics 365 URL* is empty (Step 1.3). |
 | *"You don't have access to this app"* | Share the **Contact Center Call Review** app with the agent's security role (Step 2.4). |
 | Microsoft sign-in page inside the pop-up | Sign in to Dynamics 365 once in another browser tab, then reopen the pop-up. |
+| Browser console shows *"Refused to frame … frame-ancestors"* | Your Dynamics 365 environment enforces a content security policy. In the Power Platform admin center → your environment → **Settings** → **Privacy + Security** → **Content security policy**, add `https://*.lightning.force.com` and `https://*.my.salesforce.com` to the allowed frame ancestors for model-driven apps. |
 | **"Error loading control"** in the evaluation pane | Step 2.3 wasn't done or wasn't published. Also try a hard refresh (Ctrl+F5). |
+
+### The call title shows the wrong time
+
+The title is set once, when the call record is created, using **D365 Contact Center Settings** → *Time Zone Offset*, *Daylight Saving Rule* and *Time Zone Label* ([Step 1.3](1-install-salesforce.md#13-tell-salesforce-where-your-dynamics-365-is-and-your-time-zone)). Fix the settings. New calls will use them, and you can rename existing records by hand. The **Call Journey card** always shows times in each user's own Salesforce time zone.
+
+### The call has no Customer (Contact)
+
+The call record copies the **Contact** from the Case. If your IVR doesn't set a Contact on the Case (for example, it doesn't look the caller up), the call's *Customer* stays empty. Everything else still works. See [Step 3](3-configure-copilot-studio.md#optional-link-the-caller-to-a-contact).
 
 ### Dynamics 365 is stuck on the loading spinner (widget or pop-up)
 
@@ -59,7 +68,7 @@ Old Dynamics 365 sign-in cookies (`OpenIdConnect.nonce.*`) have piled up. Delete
 
 | Salesforce field (Contact Center Call) | Filled by | Dynamics 365 source |
 |---|---|---|
-| Name, Case, Contact, Caller Phone, Conversation ID, Channel, Direction | Salesforce flow (when the Case is created) | Case fields |
+| Name, Case, Contact, Caller Phone, Conversation ID, Channel, Direction | Salesforce flow (when the Case is created); the title's time zone comes from D365 Contact Center Settings | Case fields |
 | Call Received, Agent Connected, Call Ended | D365 sync flow | `msdyn_createdon`, `msdyn_activeagentassignedon`, `msdyn_closedon` / `msdyn_wrapupinitiatedon` |
 | Queue, Agent, Customer Sentiment | D365 sync flow | queue, active agent, `msdyn_customersentimentlabel` |
 | Talk / Wait / Handle Time | D365 sync flow | `msdyn_conversationtalktimeinseconds`, `…firstwaittimeinseconds`, `…handletimeinseconds` |
