@@ -156,8 +156,8 @@ You need:
 │   ├── D365ContactCenter_CallJourney_Salesforce.zip   ← install this in Salesforce (Step 1)
 │   └── source/                                        ← the same content, unzipped (for reading / version control)
 ├── dynamics365/
-│   ├── D365ContactCenterSalesforceCallJourney_1_0_0_0.zip  ← import this in Dynamics 365 (Step 2)
-│   └── webresource-source/new_d365cc_evaluationpanefix.js  ← readable copy of the pane fix script
+│   ├── D365ContactCenterSalesforceCallJourney_1_1_0_0.zip  ← import this in Dynamics 365 (Step 2)
+│   └── webresource-source/new_d365cc_evaluationpanefix.js  ← readable copy of the Conversation form fix script
 ├── copilot-studio/
 │   ├── d365-context-variables-topic.yaml              ← paste into a new topic (Step 3)
 │   └── create-case-field-mapping.md                   ← the one field to add to your "Create Case" action
@@ -211,7 +211,7 @@ The full list is in [docs/4-test-and-troubleshoot.md](docs/4-test-and-troublesho
 |---|---|
 | Pop-up says *"refused to connect"* | Make sure the Trusted URL `D365_Contact_Center` (`https://*.dynamics.com`, frame-src) is **active**: Setup → Trusted URLs. |
 | Pop-up is empty / Play button missing | Fill in **D365 Contact Center Settings** (Step 1.3). |
-| *"Error loading control"* in the Evaluation pane | Add the pane fix to the Conversation form (Step 2.3). |
+| *"Error loading control"* in the Evaluation pane, or an empty Transcript tab in the pop-up | Add the Conversation form fix (Step 2.3). |
 | No call record created | The Case has no `D365 Conversation ID`: check Step 3. Also check the running user has the permission set. |
 | Call record never shows metrics / quality | The sync flow is off or its Salesforce connection user lacks the permission set (Step 2.2). |
 | D365 pages stuck on the loading spinner (often right after publishing customizations) | Clear the site data for `*.crm.dynamics.com` (keeps you signed in if you keep cookies) and reload. |
@@ -237,6 +237,12 @@ Every organization-specific value is entered by you after installing:
 Microsoft's **Evaluation Details** control (`MscrmControls.OC.OCEvaluationDetailsControl`) uses the Fluent UI v8 library (`FluentUIReact`) but doesn't declare it as a dependency. It only works in apps where another control happens to load Fluent UI first (e.g. the multi-session Customer Service workspace). Everywhere else (Customer Service Hub, custom apps, and embedded views like the Salesforce pop-up) it fails with **"Error loading control"**.
 
 `new_d365cc_evaluationpanefix.js` loads the exact Fluent UI v8 build that the platform ships (from the same Power Apps CDN) before the pane opens. In apps that already have Fluent UI, it does nothing.
+
+### Why the transcript fix is needed
+
+Microsoft's transcript loader (`msdyn_ChatControl.htm`) starts by reading `window.top.Xrm`. Opened directly in Dynamics 365, the top window *is* Dynamics 365, so it works. Inside the Salesforce pop-up, the top window is Salesforce, the browser blocks that cross-site read, the loader stops, and the **Transcript** tab stays blank. Recording, metrics and evaluation don't make that call, so they still work. No setting changes this.
+
+When, and only when, the conversation is shown inside another site and the transcript area stays empty, the same script reads the conversation's transcript (the `msdyn_transcript` record's message file, using the signed-in user's own permissions) and shows it in the Transcript tab. You get speaker, time and message, and Microsoft's **Search** box and **Download transcript** button keep working. Opened directly in Dynamics 365, Microsoft's control is left untouched.
 
 ---
 

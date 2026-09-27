@@ -8,7 +8,7 @@ You'll import **one zip file** into Dynamics 365, turn on one flow, and add one 
 
 ## 2.1 Import the solution
 
-1. Download **[`dynamics365/D365ContactCenterSalesforceCallJourney_1_0_0_0.zip`](../dynamics365/D365ContactCenterSalesforceCallJourney_1_0_0_0.zip)** (GitHub → **Download raw file**). Don't unzip it.
+1. Download **[`dynamics365/D365ContactCenterSalesforceCallJourney_1_1_0_0.zip`](../dynamics365/D365ContactCenterSalesforceCallJourney_1_1_0_0.zip)** (GitHub → **Download raw file**). Don't unzip it.
 2. Go to **https://make.powerapps.com** and pick your **Contact Center environment** (top-right environment picker).
 3. Left menu → **Solutions** → **Import solution** → **Browse** → pick the zip → **Next**.
 4. You'll see **Connections** for two connection references:
@@ -31,9 +31,9 @@ You'll import **one zip file** into Dynamics 365, turn on one flow, and add one 
 
 **What this flow does:** when a voice conversation ends (*Wrap-up* or *Closed*), it reads the call's times, queue, agent, sentiment and the latest **AI quality evaluation**. Then it updates the Salesforce *Contact Center Call* record that has the same conversation ID. If no Salesforce record exists (e.g. calls that didn't come through the IVR), it simply stops, successfully.
 
-## 2.3 Add the Evaluation pane fix to the Conversation form
+## 2.3 Add the Conversation form fix
 
-This makes the **Quality Evaluation** side pane load inside the Salesforce pop-up (and in Customer Service Hub) instead of showing *"Error loading control"*. It's a one-time change to Microsoft's **Conversation Form**.
+This makes the **Quality Evaluation** side pane load inside the Salesforce pop-up (and in Customer Service Hub) instead of showing *"Error loading control"*, and makes the **Transcript** tab show the conversation inside the pop-up instead of staying blank. It's a one-time change to Microsoft's **Conversation Form**.
 
 1. In **make.powerapps.com** → **Tables** → search **Conversation** (logical name `msdyn_ocliveworkitem`) → open it.
 2. **Forms** → open **Conversation Form** (type *Main*).
@@ -51,7 +51,11 @@ This makes the **Quality Evaluation** side pane load inside the Salesforce pop-u
 
 7. **Done** → **Save and publish**.
 
-> 🔍 **What does the script do?** It only loads the Fluent UI v8 library (from Microsoft's own Power Apps CDN) that the Evaluation Details control needs but forgets to request. If Fluent UI is already on the page, it does nothing. It doesn't hide, change or read your data. [Full explanation](../README.md#why-the-evaluation-pane-fix-is-needed) · [source code](../dynamics365/webresource-source/new_d365cc_evaluationpanefix.js).
+> 🔍 **What does the script do?**
+> - **Evaluation pane:** loads the Fluent UI v8 library (from Microsoft's own Power Apps CDN) that the Evaluation Details control needs but forgets to request. If Fluent UI is already on the page, it does nothing. [Why](../README.md#why-the-evaluation-pane-fix-is-needed)
+> - **Transcript:** only when the conversation is shown inside another site (the Salesforce pop-up) and Microsoft's transcript stays blank, it reads that conversation's transcript with the signed-in user's own permissions and shows it in the Transcript tab. Opened directly in Dynamics 365, it does nothing. [Why](../README.md#why-the-transcript-fix-is-needed)
+>
+> It doesn't change or send your data anywhere. [Source code](../dynamics365/webresource-source/new_d365cc_evaluationpanefix.js).
 
 ## 2.4 Give agents access to the Call Review app
 
@@ -75,7 +79,7 @@ The pop-up in Salesforce opens the **Contact Center Call Review** app. Out of th
 | Component | Name |
 |---|---|
 | Model-driven app | **Contact Center Call Review**: a lightweight conversation viewer with no extra side panes, fast to load inside Salesforce |
-| Web resource | `new_d365cc_evaluationpanefix.js` |
+| Web resource | `new_d365cc_evaluationpanefix.js` (Conversation form fix: Evaluation pane + transcript in the pop-up) |
 | Cloud flow | **D365 Contact Center - Sync ended calls to Salesforce** |
 | Connection references | *D365 Contact Center - Dataverse*, *D365 Contact Center - Salesforce* |
 | Publisher | *D365 Contact Center Samples* (prefix `new`) |
