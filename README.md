@@ -32,7 +32,7 @@ This project connects the two, so every phone call shows up in Salesforce with i
 
 1. [What you get](#what-you-get)
 2. [How it works](#how-it-works)
-3. [Before you start](#before-you-start)
+3. [Before you start](#before-you-start) (including how to get a free Salesforce org)
 4. [Let an AI assistant install it for you](#let-an-ai-assistant-install-it-for-you)
 5. [Install in 4 steps](#install-in-4-steps)
 6. [What's in this repo](#whats-in-this-repo)
@@ -135,6 +135,22 @@ You need:
 
 ⏱ **Time needed:** about 30–45 minutes the first time.
 
+### Don't have a Salesforce org? Get a free one
+
+A free **Salesforce Developer Edition** org is the easiest way to try this package. It is a full Salesforce org with Service Cloud and the Service Console, it costs nothing and it needs no credit card.
+
+1. Go to **https://developer.salesforce.com/signup**.
+2. Fill in the form: first and last name, **your work or personal email**, a **role**, **company** and country. Set **Username** to anything that looks like an email address and is **unique across all of Salesforce** (it does not have to be a real mailbox), for example `yourname.d365test@example.com`. Remember it: this is your admin login.
+3. Accept the terms and click **Sign me up**.
+4. Open the **verification email** (check spam) and click **Verify Account**. Choose a **password** and a security question. You land in your new org, already signed in as a System Administrator.
+5. Note your org's address, for example `https://orgfarm-xxxxxxxx-dev-ed.develop.lightning.my.salesforce.com`. Your login URL is `https://login.salesforce.com` (not `test.salesforce.com`, which is only for sandboxes). Tell the AI assistant that it is a **Developer Edition** org.
+6. Make sure the **Service Console** app is available: click the app launcher (nine dots) and search for **Service Console**. If it is missing, go to **Setup → App Manager** and check that *Service Console* is listed.
+
+Good to know:
+- A Developer Edition org is meant for learning and testing. **Do not put real customer data in it.**
+- Salesforce may delete a Developer Edition org that stays **unused for a long time**, so log in from time to time.
+- Salesforce changes its sign-up page now and then (some forms offer a Developer Edition with extra features such as Agentforce). Any **Developer Edition** works for this package. If the page above has changed, search for *"Salesforce Developer Edition sign up"* on developer.salesforce.com.
+- The first time you sign in, Salesforce may ask you to confirm your identity with a code sent by email.
 ---
 
 ## Let an AI assistant install it for you
