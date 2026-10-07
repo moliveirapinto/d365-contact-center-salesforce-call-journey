@@ -32,7 +32,7 @@ This project connects the two, so every phone call shows up in Salesforce with i
 
 1. [What you get](#what-you-get)
 2. [How it works](#how-it-works)
-3. [Before you start](#before-you-start) (including how to get a free Salesforce org)
+3. [Before you start](#before-you-start) (including how to get a free Salesforce org and how to install the connector)
 4. [Let an AI assistant install it for you](#let-an-ai-assistant-install-it-for-you)
 5. [Install in 4 steps](#install-in-4-steps)
 6. [What's in this repo](#whats-in-this-repo)
@@ -41,7 +41,6 @@ This project connects the two, so every phone call shows up in Salesforce with i
 9. [Optional extras](#optional-extras)
 10. [Uninstalling](#uninstalling)
 11. [Disclaimer & license](#disclaimer--license)
-12. [Need help installing the Salesforce connector?](#need-help-installing-the-salesforce-connector)
 
 ---
 
@@ -153,9 +152,126 @@ Good to know:
 - The first time you sign in, Salesforce may ask you to confirm your identity with a code sent by email.
 ---
 
+### Need help installing the Salesforce connector?
+
+The call journey in this repo assumes the **Dynamics 365 Contact Center panel (the softphone) already works inside your Salesforce console**. If it does not yet, an AI assistant can set it up for you: paste the prompt below into **Claude** (with browser or computer use), **Claude Code**, or a similar agent that can run commands.
+
+It sets up, in your own Salesforce org and Dynamics 365 environment:
+
+1. a **Call Center** (the "D365" connector) that points to the Dynamics 365 Contact Center widget,
+2. the **Trusted URL** that lets Salesforce show that widget (without it you get a blocked icon),
+3. the **Open CTI softphone** in the Service Console utility bar, sized 1200 x 640,
+4. the **users** who can see it,
+5. the **Dynamics 365 side**: Contact Center and voice channel, agent licenses and roles, the widget address, and the content security policy that lets Salesforce show Dynamics 365,
+6. a final **check** that the panel loads and signs in.
+
+**You stay in control:** you sign in yourself (including MFA). The assistant changes nothing outside this list, shows you a backup first, and asks before touching a production org.
+
+> ✅ **Nothing to edit.** Paste the prompt exactly as it is. The assistant starts by **asking you** for what it needs: your Salesforce org (sandbox, Developer Edition or production), your Dynamics 365 environment URL, and which users should see the panel. Have those ready. Anything in `<angle brackets>` is filled in by the assistant from your answers. You never type passwords: you sign in yourself in the browser, including MFA.
+
+````text
+You are a Salesforce installation engineer. Install the "Dynamics 365 Contact Center" connector (Open CTI softphone) in MY Salesforce org so the Dynamics 365 Contact Center panel opens inside the Salesforce console. Work carefully, change only what is listed, and verify every step.
+
+REFERENCE
+- This repository's README (https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/README.md) is context only.
+- Microsoft's official documentation is the source of truth for this connector. Search Microsoft Learn for "Dynamics 365 Contact Center Salesforce integration" and "Open CTI Call Center Salesforce Dynamics 365". If anything below disagrees with the current Microsoft documentation, follow Microsoft, tell me what differs, and continue.
+- Values this install uses (they were tested and work):
+  * Call Center internal name: Dynamics365CallCenter. Display name: D365.
+  * CTI Adapter URL: https://ccaas-embed-prod.azureedge.net/widget/index.html?dynamicsUrl=<MY D365 ORG URL>/   (note the trailing slash)
+  * Use CTI API: true. Softphone Height: 640. Softphone Width: 1200. Salesforce Compatibility Mode: Classic_and_Lightning.
+  * Trusted URL: https://ccaas-embed-prod.azureedge.net, active, applicable to frame-src, connect-src, img-src and style-src.
+  * Utility item: standard component "Open CTI Softphone" (opencti:softPhone), label "D365 Contact Center", width 1200, height 640, in the Service Console utility bar.
+
+HOW TO WORK
+- Use the tools you have (browser, shell, Salesforce CLI "sf"). If you cannot operate a browser, switch to GUIDE MODE: give me ONE step at a time with exact click paths, wait for me to say "done", and verify what I report before moving on.
+- Never guess. If a screen or value differs from this prompt, STOP and tell me exactly what you see.
+- Retry a failed action at most twice, then stop and show me the exact error.
+- I sign in myself, including MFA. Never ask me to paste passwords or tokens in this chat and never store any.
+- Do not delete or change anything that is not listed here. Never touch a different Salesforce org.
+- After each step give a one-line status: OK / WARNING / FAILED.
+
+STEP 0 - QUESTIONS (ask all in one message, then wait)
+1. Salesforce org: sandbox, Developer Edition or production? Login URL or CLI alias, and admin username? If production, warn me and continue only after I answer "yes, production".
+2. My Dynamics 365 Contact Center environment URL (for example https://contoso.crm.dynamics.com). It must start with https:// and end at ".dynamics.com" (no path). Use it exactly as I give it. It may also be a regional host such as crm4.dynamics.com.
+3. Which Salesforce users (usernames) must see the D365 panel? Is it every agent, or specific people?
+4. Which Salesforce Lightning app should show it (default: Service Console)? Does that app already have a utility bar?
+5. Is there already a Call Center in this org (Setup > Call Centers) or an Open CTI softphone in the utility bar? (If you can check it yourself, do so and tell me instead of asking.)
+6. Confirm I have: (a) a Salesforce System Administrator login, (b) a Dynamics 365 Contact Center user with an agent license who can sign in to the environment above, (c) a browser that allows pop-ups and third-party cookies for my Salesforce domain (see STEP 7), (d) a Power Platform / Dynamics 365 administrator login for the environment above, which STEP 6 needs.
+
+STEP 1 - PREFLIGHT (read-only)
+1. Sign in: with the Salesforce CLI "sf org login web --alias <alias>" (add --instance-url https://test.salesforce.com for a sandbox), or in the browser. I complete the sign-in.
+2. Check what already exists, and tell me before changing anything:
+   - Call Centers: sf data query -q "SELECT Id, InternalName, Name, AdapterUrl FROM CallCenter"
+   - Users already assigned: sf data query -q "SELECT Id, Username, CallCenterId FROM User WHERE CallCenterId != null"
+   - Trusted URLs: sf data query --use-tooling-api -q "SELECT DeveloperName, EndpointUrl, IsActive FROM CspTrustedSite"
+   - Utility bar of the target app: Setup > App Manager > (app) > Edit > Utility Items, or retrieve it with: sf project retrieve start -m FlexiPage:<UtilityBar name> (find it with the Tooling API: SELECT DeveloperName, MasterLabel FROM FlexiPage WHERE Type='UtilityBar')
+3. If a Call Center for D365 already exists, STOP and ask me whether to update it or leave it.
+4. BACKUP: save the current utility bar FlexiPage XML to a local folder (for example "backup-before-d365-connector") and tell me where it is. This is how to roll back.
+
+STEP 2 - CALL CENTER
+1. UI route (preferred, always works): Setup > Call Centers. If Salesforce shows an introduction page, click Continue. Click Import and upload an XML file with this content (replace <D365 ORG URL> with mine, keep the trailing slash). Save it as D365CallCenter.xml:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<callCenter>
+  <section sortOrder="0" name="reqGeneralInfo" label="General Information">
+    <item sortOrder="0" name="reqInternalName" label="InternalName">Dynamics365CallCenter</item>
+    <item sortOrder="1" name="reqDisplayName" label="Display Name">D365</item>
+    <item sortOrder="2" name="reqAdapterUrl" label="CTI Adapter URL">https://ccaas-embed-prod.azureedge.net/widget/index.html?dynamicsUrl=<D365 ORG URL>/</item>
+    <item sortOrder="3" name="reqUseApi" label="Use CTI API">true</item>
+    <item sortOrder="4" name="reqSoftphoneHeight" label="Softphone Height">640</item>
+    <item sortOrder="5" name="reqSoftphoneWidth" label="Softphone Width">1200</item>
+    <item sortOrder="6" name="reqSalesforceCompatibilityMode" label="Salesforce Compatibility Mode">Classic_and_Lightning</item>
+  </section>
+</callCenter>
+
+2. Alternative with the CLI (metadata deploy): create force-app/main/default/callCenters/Dynamics365CallCenter.callCenter-meta.xml with <adapterUrl>, <displayName>D365</displayName> and the five items above in a <sections> block named reqGeneralInfo, plus <customSettings> JSON {"reqSoftphoneHeight":"640","reqUseApi":"true","reqSoftphoneWidth":"1200","reqSalesforceCompatibilityMode":"Classic_and_Lightning"}, then run: sf project deploy start --source-dir force-app --target-org <alias>. Use this only if the import fails.
+3. VERIFY: open the Call Center record and confirm every field, and that the CTI Adapter URL contains MY org URL and ends with "/". Query: SELECT InternalName, Name, AdapterUrl FROM CallCenter must return exactly one D365 row.
+
+STEP 3 - ASSIGN USERS
+1. On the Call Center page click "Manage Call Center Users" > "Add More Users", filter, tick the users I named, then Add to Call Center. (A user can belong to only ONE call center; if one is already in another, STOP and ask me.)
+2. VERIFY with: SELECT Username FROM User WHERE CallCenterId = '<the call center Id>' and compare to my list.
+
+STEP 4 - TRUSTED URL
+1. Setup > Trusted URLs > New Trusted URL. API Name: D365_CCaaS_Embed. URL: https://ccaas-embed-prod.azureedge.net. Active: ticked. Context: All. Tick the CSP directives: frame-src, connect-src, img-src and style-src. Save. (Equivalent metadata: CspTrustedSite with endpointUrl https://ccaas-embed-prod.azureedge.net, isApplicableToFrameSrc/ConnectSrc/ImgSrc/StyleSrc true, isActive true, context All.)
+2. Also make sure my Dynamics 365 org URL (https://<my org>.crm.dynamics.com, plus the https://*.dynamics.com wildcard if my org uses a regional host) is an active Trusted URL for frame-src and connect-src. If the Salesforce package of this repo is installed it already contains BOTH Trusted URLs (D365_CCaaS_Embed and D365_Contact_Center, the latter for https://*.dynamics.com), so check first and do not add duplicates.
+3. VERIFY: SELECT DeveloperName, EndpointUrl, IsActive FROM CspTrustedSite (Tooling API) shows both URLs active.
+
+STEP 5 - UTILITY BAR (Open CTI softphone)
+1. Setup > App Manager > Service Console (or the app I named) > Edit > Utility Items > Add Utility Item > "Open CTI Softphone". Label: D365 Contact Center. Icon: people (any). Panel Width 1200. Panel Height 640. Keep the other existing utility items (History, Notes, ...). Save.
+2. Do not add a second Open CTI softphone. If an old connector item exists (for example another softphone or a custom "Edge" container), ask me before removing it, and keep the backup from STEP 1.
+3. VERIFY: reload the Service Console; the utility bar shows "D365 Contact Center" at the bottom. Query the FlexiPage again and confirm it contains componentName opencti:softPhone exactly once.
+
+STEP 6 - DYNAMICS 365 SIDE (the panel only works if this is in place; check each item and report)
+Sign-in: ask me to sign in at https://admin.powerplatform.microsoft.com with a Dynamics 365 / Power Platform administrator account, and use the environment I named. Menu names change between releases; if a name differs, search for it and tell me what you found.
+1. Contact Center is installed and has a voice channel. Power Platform admin center > Environments > my environment > Resources > Dynamics 365 apps: "Dynamics 365 Contact Center" (and the "Copilot Service admin center" app) must be installed. Open the Copilot Service admin center and confirm a voice workstream/channel exists (phone number or Azure Communication Services resource). If not, STOP: the connector cannot work without Contact Center and a voice channel, and setting that up is a separate Microsoft guide (Learn: "Set up Dynamics 365 Contact Center"); tell me.
+2. Agents. Every person who will use the panel needs (a) a Dynamics 365 Contact Center (or Customer Service Enterprise + Omnichannel) license, (b) a Dynamics 365 user in this environment with the security role "Omnichannel agent" (or "Customer Service Representative"), and (c) membership in a queue/workstream that receives voice calls. Check each user I listed in Step 0 and report what is missing. Do not change roles or licenses without my "yes".
+3. Widget address. In the Copilot Service admin center open my default contact center, find the "Conversation widget" setting and read the "Embeddable conversation widget URL". Compare it with the address used in this install (https://ccaas-embed-prod.azureedge.net/widget/index.html?dynamicsUrl=<my D365 URL>/). If Microsoft's current URL is different, use Microsoft's URL in the Call Center CTI Adapter URL (STEP 2) and tell me what differs. If the setting does not exist in my environment, tell me and continue with the address above.
+4. Allow Salesforce to frame Dynamics 365 (needed for the Recording & transcript pop-up). Power Platform admin center > Environments > my environment > Settings > Product > Privacy + Security > Content security policy. If frame-ancestors is enforced (not "report only" and not unrestricted) for model-driven apps, ADD these allowed frame ancestors, keeping the existing ones: https://*.lightning.force.com, https://*.my.salesforce.com and https://*.salesforce.com (plus my My Domain host if it is a different pattern). If the policy is not enforced, nothing is needed: note that. Show me the exact list before saving.
+5. Browser. The agent signs in to Dynamics 365 inside the panel, in a pop-up. Pop-ups and third-party cookies must be allowed for my Salesforce domains, [*.]dynamics.com, [*.]microsoftonline.com and [*.]azureedge.net (Edge: Settings > Cookies and site permissions; Chrome: Settings > Privacy and security > Third-party cookies > Sites that can always use cookies). If my company manages the browser by policy, tell me to ask IT.
+6. Production caution: none of the items above change live calls, but the frame-ancestors change affects who can embed Dynamics 365. Say so and get my "yes" before saving it in a production environment.
+
+STEP 7 - BROWSER CHECK AND FIRST SIGN-IN
+1. Tell me to hard-refresh Salesforce (Ctrl+Shift+R) and click "D365 Contact Center" in the utility bar.
+2. Expected: the panel opens at about 1200 x 640 and shows "Signing in... Complete the sign in process in pop-up". A Microsoft sign-in pop-up opens. I sign in with my Dynamics 365 agent account. Afterwards the panel shows the agent presence/status controls.
+3. If the pop-up is blocked: allow pop-ups for my Salesforce domain. If the panel stays blank or says it cannot sign in: allow third-party cookies for [*.]dynamics.com, [*.]microsoftonline.com, [*.]azureedge.net and my Salesforce domain (Edge: Settings > Cookies and site permissions; Chrome: Settings > Privacy and security > Third-party cookies > Sites that can always use cookies), then retry in a normal (not private) window.
+4. If I see a blocked/empty icon instead of the panel: the Trusted URL from STEP 4 is missing or inactive, or the browser console shows a "Refused to frame" / CSP error; fix the URL it names. If the console says the user is not allowed: STEP 3 was not completed for my user, or I am not a D365 Contact Center agent.
+5. If the panel shows an HTTP 400 "Request Too Long" error: clear cookies for dynamics.com and microsoftonline.com and retry.
+
+STEP 8 - FINAL REPORT
+Give me a table: item (Call Center, users, Trusted URLs, utility item, first sign-in) / status (OK, WARNING, FAILED) / what you saw. List exactly what you changed, where the backup is, and how to roll back (restore the saved utility bar, remove the users from the call center, delete the Call Center and the Trusted URL D365_CCaaS_Embed). Then tell me the next step: install the call journey package from this README ("Let an AI assistant install it for you").
+
+START with STEP 0.
+````
+
+### What this prompt cannot do for you
+
+- It cannot sign in for you or accept the Microsoft sign-in pop-up.
+- It needs your Dynamics 365 user to be a Contact Center agent with the right license; that is configured in Dynamics 365, not in Salesforce.
+- If your company blocks third-party cookies or pop-ups by policy, your IT team has to allow them for the domains listed in STEP 7 and STEP 6.5.
+
 ## Let an AI assistant install it for you
 
-Copy the whole prompt below into an AI assistant that can work in a browser and/or run commands (for example **Claude** with computer or browser use, **Claude Code**, or a similar agent). It asks you a few questions, installs everything in the right order (Salesforce, Dynamics 365, Copilot Studio), checks each step and finishes with a test call. If your assistant cannot operate a browser, the prompt switches to a guided mode where it walks you through each click.
+This is the third step, after you have a Salesforce org and the Dynamics 365 panel works inside the Service Console (see the two sections above). Copy the whole prompt below into an AI assistant that can work in a browser and/or run commands (for example **Claude** with computer or browser use, **Claude Code**, or a similar agent). It asks you a few questions, installs everything in the right order (Salesforce, Dynamics 365, Copilot Studio), checks each step and finishes with a test call. If your assistant cannot operate a browser, the prompt switches to a guided mode where it walks you through each click.
 
 **You stay in control:** you sign in yourself (including MFA), and the assistant stops and asks whenever something is not as expected or before anything that affects live calls.
 
@@ -221,6 +337,7 @@ Assign the permission set to every user I listed: sf org assign permset --name D
 
 PHASE 5 - DYNAMICS 365 (docs/2-install-dynamics365.md)
 1. Open https://make.powerapps.com, ask me to sign in, and select the environment I named.
+   Also check the content security policy that lets Salesforce show Dynamics 365 in the Recording & transcript pop-up: Power Platform admin center > Environments > my environment > Settings > Product > Privacy + Security > Content security policy. If frame-ancestors is enforced, it must allow https://*.lightning.force.com and https://*.my.salesforce.com (and my My Domain host). Show me the list and ask before adding. If it is not enforced, nothing is needed. The Contact Center panel itself is covered by the section "Need help installing the Salesforce connector?"; if the panel does not open, use that prompt first.
 2. Solutions > Import solution > Browse > file B > Next. On the connections page:
    - "D365 Contact Center - Dataverse": select my Microsoft Dataverse connection, or create one (I sign in).
    - "D365 Contact Center - Salesforce": create a new Salesforce connection, login type Production or Sandbox to match my org, and I sign in with the Salesforce user that received the permission set in Phase 4.
@@ -421,111 +538,3 @@ This is a **community sample**, not an official Microsoft or Salesforce product,
 Released under the [MIT License](LICENSE).
 
 
----
-
-## Need help installing the Salesforce connector?
-
-The call journey in this repo assumes the **Dynamics 365 Contact Center panel (the softphone) already works inside your Salesforce console**. If it does not yet, an AI assistant can set it up for you: paste the prompt below into **Claude** (with browser or computer use), **Claude Code**, or a similar agent that can run commands.
-
-It sets up, in your own Salesforce org:
-
-1. a **Call Center** (the "D365" connector) that points to the Dynamics 365 Contact Center widget,
-2. the **Trusted URL** that lets Salesforce show that widget (without it you get a blocked icon),
-3. the **Open CTI softphone** in the Service Console utility bar, sized 1200 x 640,
-4. the **users** who can see it,
-5. a final **check** that the panel loads and signs in.
-
-**You stay in control:** you sign in yourself (including MFA). The assistant changes nothing outside this list, shows you a backup first, and asks before touching a production org.
-
-> ✅ **Nothing to edit.** Paste the prompt exactly as it is. The assistant starts by **asking you** for what it needs: your Salesforce org (sandbox, Developer Edition or production), your Dynamics 365 environment URL, and which users should see the panel. Have those ready. Anything in `<angle brackets>` is filled in by the assistant from your answers. You never type passwords: you sign in yourself in the browser, including MFA.
-
-````text
-You are a Salesforce installation engineer. Install the "Dynamics 365 Contact Center" connector (Open CTI softphone) in MY Salesforce org so the Dynamics 365 Contact Center panel opens inside the Salesforce console. Work carefully, change only what is listed, and verify every step.
-
-REFERENCE
-- This repository's README (https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/README.md) is context only.
-- Microsoft's official documentation is the source of truth for this connector. Search Microsoft Learn for "Dynamics 365 Contact Center Salesforce integration" and "Open CTI Call Center Salesforce Dynamics 365". If anything below disagrees with the current Microsoft documentation, follow Microsoft, tell me what differs, and continue.
-- Values this install uses (they were tested and work):
-  * Call Center internal name: Dynamics365CallCenter. Display name: D365.
-  * CTI Adapter URL: https://ccaas-embed-prod.azureedge.net/widget/index.html?dynamicsUrl=<MY D365 ORG URL>/   (note the trailing slash)
-  * Use CTI API: true. Softphone Height: 640. Softphone Width: 1200. Salesforce Compatibility Mode: Classic_and_Lightning.
-  * Trusted URL: https://ccaas-embed-prod.azureedge.net, active, applicable to frame-src, connect-src, img-src and style-src.
-  * Utility item: standard component "Open CTI Softphone" (opencti:softPhone), label "D365 Contact Center", width 1200, height 640, in the Service Console utility bar.
-
-HOW TO WORK
-- Use the tools you have (browser, shell, Salesforce CLI "sf"). If you cannot operate a browser, switch to GUIDE MODE: give me ONE step at a time with exact click paths, wait for me to say "done", and verify what I report before moving on.
-- Never guess. If a screen or value differs from this prompt, STOP and tell me exactly what you see.
-- Retry a failed action at most twice, then stop and show me the exact error.
-- I sign in myself, including MFA. Never ask me to paste passwords or tokens in this chat and never store any.
-- Do not delete or change anything that is not listed here. Never touch a different Salesforce org.
-- After each step give a one-line status: OK / WARNING / FAILED.
-
-STEP 0 - QUESTIONS (ask all in one message, then wait)
-1. Salesforce org: sandbox, Developer Edition or production? Login URL or CLI alias, and admin username? If production, warn me and continue only after I answer "yes, production".
-2. My Dynamics 365 Contact Center environment URL (for example https://contoso.crm.dynamics.com). It must start with https:// and end at ".dynamics.com" (no path). Use it exactly as I give it. It may also be a regional host such as crm4.dynamics.com.
-3. Which Salesforce users (usernames) must see the D365 panel? Is it every agent, or specific people?
-4. Which Salesforce Lightning app should show it (default: Service Console)? Does that app already have a utility bar?
-5. Is there already a Call Center in this org (Setup > Call Centers) or an Open CTI softphone in the utility bar? (If you can check it yourself, do so and tell me instead of asking.)
-6. Confirm I have: (a) a Salesforce System Administrator login, (b) a Dynamics 365 Contact Center user with an agent license who can sign in to the environment above, (c) a browser that allows pop-ups and third-party cookies for my Salesforce domain (see STEP 6).
-
-STEP 1 - PREFLIGHT (read-only)
-1. Sign in: with the Salesforce CLI "sf org login web --alias <alias>" (add --instance-url https://test.salesforce.com for a sandbox), or in the browser. I complete the sign-in.
-2. Check what already exists, and tell me before changing anything:
-   - Call Centers: sf data query -q "SELECT Id, InternalName, Name, AdapterUrl FROM CallCenter"
-   - Users already assigned: sf data query -q "SELECT Id, Username, CallCenterId FROM User WHERE CallCenterId != null"
-   - Trusted URLs: sf data query --use-tooling-api -q "SELECT DeveloperName, EndpointUrl, IsActive FROM CspTrustedSite"
-   - Utility bar of the target app: Setup > App Manager > (app) > Edit > Utility Items, or retrieve it with: sf project retrieve start -m FlexiPage:<UtilityBar name> (find it with the Tooling API: SELECT DeveloperName, MasterLabel FROM FlexiPage WHERE Type='UtilityBar')
-3. If a Call Center for D365 already exists, STOP and ask me whether to update it or leave it.
-4. BACKUP: save the current utility bar FlexiPage XML to a local folder (for example "backup-before-d365-connector") and tell me where it is. This is how to roll back.
-
-STEP 2 - CALL CENTER
-1. UI route (preferred, always works): Setup > Call Centers. If Salesforce shows an introduction page, click Continue. Click Import and upload an XML file with this content (replace <D365 ORG URL> with mine, keep the trailing slash). Save it as D365CallCenter.xml:
-
-<?xml version="1.0" encoding="UTF-8"?>
-<callCenter>
-  <section sortOrder="0" name="reqGeneralInfo" label="General Information">
-    <item sortOrder="0" name="reqInternalName" label="InternalName">Dynamics365CallCenter</item>
-    <item sortOrder="1" name="reqDisplayName" label="Display Name">D365</item>
-    <item sortOrder="2" name="reqAdapterUrl" label="CTI Adapter URL">https://ccaas-embed-prod.azureedge.net/widget/index.html?dynamicsUrl=<D365 ORG URL>/</item>
-    <item sortOrder="3" name="reqUseApi" label="Use CTI API">true</item>
-    <item sortOrder="4" name="reqSoftphoneHeight" label="Softphone Height">640</item>
-    <item sortOrder="5" name="reqSoftphoneWidth" label="Softphone Width">1200</item>
-    <item sortOrder="6" name="reqSalesforceCompatibilityMode" label="Salesforce Compatibility Mode">Classic_and_Lightning</item>
-  </section>
-</callCenter>
-
-2. Alternative with the CLI (metadata deploy): create force-app/main/default/callCenters/Dynamics365CallCenter.callCenter-meta.xml with <adapterUrl>, <displayName>D365</displayName> and the five items above in a <sections> block named reqGeneralInfo, plus <customSettings> JSON {"reqSoftphoneHeight":"640","reqUseApi":"true","reqSoftphoneWidth":"1200","reqSalesforceCompatibilityMode":"Classic_and_Lightning"}, then run: sf project deploy start --source-dir force-app --target-org <alias>. Use this only if the import fails.
-3. VERIFY: open the Call Center record and confirm every field, and that the CTI Adapter URL contains MY org URL and ends with "/". Query: SELECT InternalName, Name, AdapterUrl FROM CallCenter must return exactly one D365 row.
-
-STEP 3 - ASSIGN USERS
-1. On the Call Center page click "Manage Call Center Users" > "Add More Users", filter, tick the users I named, then Add to Call Center. (A user can belong to only ONE call center; if one is already in another, STOP and ask me.)
-2. VERIFY with: SELECT Username FROM User WHERE CallCenterId = '<the call center Id>' and compare to my list.
-
-STEP 4 - TRUSTED URL
-1. Setup > Trusted URLs > New Trusted URL. API Name: D365_CCaaS_Embed. URL: https://ccaas-embed-prod.azureedge.net. Active: ticked. Context: All. Tick the CSP directives: frame-src, connect-src, img-src and style-src. Save. (Equivalent metadata: CspTrustedSite with endpointUrl https://ccaas-embed-prod.azureedge.net, isApplicableToFrameSrc/ConnectSrc/ImgSrc/StyleSrc true, isActive true, context All.)
-2. Also make sure my Dynamics 365 org URL (https://<my org>.crm.dynamics.com, plus the https://*.dynamics.com wildcard if my org uses a regional host) is an active Trusted URL for frame-src and connect-src. If the Salesforce package of this repo is installed it already contains BOTH Trusted URLs (D365_CCaaS_Embed and D365_Contact_Center, the latter for https://*.dynamics.com), so check first and do not add duplicates.
-3. VERIFY: SELECT DeveloperName, EndpointUrl, IsActive FROM CspTrustedSite (Tooling API) shows both URLs active.
-
-STEP 5 - UTILITY BAR (Open CTI softphone)
-1. Setup > App Manager > Service Console (or the app I named) > Edit > Utility Items > Add Utility Item > "Open CTI Softphone". Label: D365 Contact Center. Icon: people (any). Panel Width 1200. Panel Height 640. Keep the other existing utility items (History, Notes, ...). Save.
-2. Do not add a second Open CTI softphone. If an old connector item exists (for example another softphone or a custom "Edge" container), ask me before removing it, and keep the backup from STEP 1.
-3. VERIFY: reload the Service Console; the utility bar shows "D365 Contact Center" at the bottom. Query the FlexiPage again and confirm it contains componentName opencti:softPhone exactly once.
-
-STEP 6 - BROWSER CHECK AND FIRST SIGN-IN
-1. Tell me to hard-refresh Salesforce (Ctrl+Shift+R) and click "D365 Contact Center" in the utility bar.
-2. Expected: the panel opens at about 1200 x 640 and shows "Signing in... Complete the sign in process in pop-up". A Microsoft sign-in pop-up opens. I sign in with my Dynamics 365 agent account. Afterwards the panel shows the agent presence/status controls.
-3. If the pop-up is blocked: allow pop-ups for my Salesforce domain. If the panel stays blank or says it cannot sign in: allow third-party cookies for [*.]dynamics.com, [*.]microsoftonline.com, [*.]azureedge.net and my Salesforce domain (Edge: Settings > Cookies and site permissions; Chrome: Settings > Privacy and security > Third-party cookies > Sites that can always use cookies), then retry in a normal (not private) window.
-4. If I see a blocked/empty icon instead of the panel: the Trusted URL from STEP 4 is missing or inactive, or the browser console shows a "Refused to frame" / CSP error; fix the URL it names. If the console says the user is not allowed: STEP 3 was not completed for my user, or I am not a D365 Contact Center agent.
-5. If the panel shows an HTTP 400 "Request Too Long" error: clear cookies for dynamics.com and microsoftonline.com and retry.
-
-STEP 7 - FINAL REPORT
-Give me a table: item (Call Center, users, Trusted URLs, utility item, first sign-in) / status (OK, WARNING, FAILED) / what you saw. List exactly what you changed, where the backup is, and how to roll back (restore the saved utility bar, remove the users from the call center, delete the Call Center and the Trusted URL D365_CCaaS_Embed). Then tell me the next step: install the call journey package from this README ("Let an AI assistant install it for you").
-
-START with STEP 0.
-````
-
-### What this prompt cannot do for you
-
-- It cannot sign in for you or accept the Microsoft sign-in pop-up.
-- It needs your Dynamics 365 user to be a Contact Center agent with the right license; that is configured in Dynamics 365, not in Salesforce.
-- If your company blocks third-party cookies or pop-ups by policy, your IT team has to allow them for the domains listed in STEP 6.
