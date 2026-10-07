@@ -143,6 +143,8 @@ Copy the whole prompt below into an AI assistant that can work in a browser and/
 
 **You stay in control:** you sign in yourself (including MFA), and the assistant stops and asks whenever something is not as expected or before anything that affects live calls.
 
+> ✅ **Nothing to edit.** Paste the prompt exactly as it is. The assistant starts by **asking you** for what it needs: your Salesforce org (sandbox or production), your Dynamics 365 environment URL, your time zone, which users get access and the name of your Copilot Studio agent. Have those ready. Anything written in `<angle brackets>` or with an example value (such as `contoso.crm.dynamics.com`) is filled in by the assistant from your answers. You never type passwords: you sign in yourself in the browser, including MFA.
+
 ````text
 You are an installation engineer. Install the community package "Dynamics 365 Contact Center x Salesforce Call Journey" for me, end to end, carefully and safely. It has three parts that must be done IN ORDER: Salesforce, then Dynamics 365, then Copilot Studio.
 
@@ -418,6 +420,8 @@ It sets up, in your own Salesforce org:
 5. a final **check** that the panel loads and signs in.
 
 **You stay in control:** you sign in yourself (including MFA). The assistant changes nothing outside this list, shows you a backup first, and asks before touching a production org.
+
+> ✅ **Nothing to edit.** Paste the prompt exactly as it is. The assistant starts by **asking you** for what it needs: your Salesforce org (sandbox, Developer Edition or production), your Dynamics 365 environment URL, and which users should see the panel. Have those ready. Anything in `<angle brackets>` is filled in by the assistant from your answers. You never type passwords: you sign in yourself in the browser, including MFA.
 
 ````text
 You are a Salesforce installation engineer. Install the "Dynamics 365 Contact Center" connector (Open CTI softphone) in MY Salesforce org so the Dynamics 365 Contact Center panel opens inside the Salesforce console. Work carefully, change only what is listed, and verify every step.
