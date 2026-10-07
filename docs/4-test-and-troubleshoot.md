@@ -37,7 +37,7 @@
 
 | Symptom | Fix |
 |---|---|
-| *"&lt;your-org&gt;.crm.dynamics.com refused to connect"* or a blank frame | Setup → **Trusted URLs** → `D365_Contact_Center` must be **Active** with **frame-src** ticked. |
+| *"&lt;your-org&gt;.crm.dynamics.com refused to connect"* or a blank frame | Setup → **Trusted URLs** → `D365_Contact_Center` must be **Active** with **frame-src** ticked. If the Contact Center panel in the utility bar shows a blocked icon, `D365_CCaaS_Embed` (`https://ccaas-embed-prod.azureedge.net`) must be active too. |
 | No *Recording & transcript* button | The **D365 Contact Center Settings** → *Dynamics 365 URL* is empty (Step 1.3). |
 | *"You don't have access to this app"* | Share the **Contact Center Call Review** app with the agent's security role (Step 2.4). |
 | Microsoft sign-in page inside the pop-up | Sign in to Dynamics 365 once in another browser tab, then reopen the pop-up. |

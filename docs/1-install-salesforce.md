@@ -35,7 +35,7 @@ Download **[`salesforce/D365ContactCenter_CallJourney_Salesforce.zip`](../salesf
 
    **Test Level:** in a **sandbox** you can pick `NoTestRun`. In **production**, leave the default (the package has no Apex code, so no tests are needed).
 7. Click **Next** → **Deploy**.
-8. Wait until the status shows **Succeeded** (usually under a minute). You should see about **48 components** deployed.
+8. Wait until the status shows **Succeeded** (usually under a minute). You should see about **49 components** deployed.
 
 > ❌ **Failed?** Workbench shows the failing component and the reason. The most common one: *"Field D365_Conversation_Id__c already exists"*, which means you already have a field with that name on Case. Rename your existing field or remove it from `package.xml`.
 
@@ -107,7 +107,7 @@ With these values a call title reads like **"Phone call received on Fri, Sep 25 
 | **D365 Contact Center - Create Call from IVR case** flow (active) | Setup → Flows |
 | **Contact Center Call Page** (the default page for call records) | Setup → Lightning App Builder |
 | **Call Timeline** and **Call Recording Modal** components | Setup → Lightning Components |
-| **Trusted URL** `https://*.dynamics.com` (frame-src) | Setup → Trusted URLs |
+| **Trusted URLs** `https://*.dynamics.com` and `https://ccaas-embed-prod.azureedge.net` | Setup → Trusted URLs |
 | **D365 Contact Center Settings** | Setup → Custom Settings |
 | **D365 Contact Center Call Access** permission set | Setup → Permission Sets |
 

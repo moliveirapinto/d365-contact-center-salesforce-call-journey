@@ -176,17 +176,17 @@ PHASE 0 - QUESTIONS (ask all in one message, then wait)
 8. Confirm I can sign in to: (a) Salesforce as a System Administrator, (b) Power Apps with System Administrator or System Customizer in the Contact Center environment, (c) Copilot Studio as a maker of the IVR agent. Also confirm the Dynamics 365 Contact Center widget (CTI) already works inside the Salesforce console, and that Contact Center has a voice channel.
 
 PHASE 1 - PREFLIGHT
-1. Download files A, B and C. Expected sizes: A 20,420 bytes, B 13,418 bytes (different only if the README names newer files). A must be a valid zip whose first entry is package.xml; B a valid zip containing solution.xml, customizations.xml, a Workflows/*.json file and a WebResources/ file.
+1. Download files A, B and C. Expected sizes: A 24,975 bytes, B 13,418 bytes (different only if the README names newer files). A must be a valid zip whose first entry is package.xml; B a valid zip containing solution.xml, customizations.xml, a Workflows/*.json file and a WebResources/ file.
 2. Salesforce, once I have signed in: check that the object Contact_Center_Call__c and the field Case.D365_Conversation_Id__c do NOT exist yet. Check the field with the Tooling API, not with "sf sobject describe" (describe hides fields the user has no permission for): sf data query --use-tooling-api -q "SELECT DeveloperName FROM CustomField WHERE EntityDefinition.QualifiedApiName='Case' AND DeveloperName LIKE 'D365%'". If they exist, an earlier version may be installed: STOP, tell me, and ask whether to upgrade over it.
 3. Power Apps, once signed in to the right environment: confirm it has the table "Conversation" (logical name msdyn_ocliveworkitem). If not, STOP. Check whether the solution "D365 Contact Center - Salesforce Call Journey" (unique name D365ContactCenterSalesforceCallJourney) already exists; if it does, tell me its version and ask before importing over it.
 
 PHASE 2 - SALESFORCE PACKAGE (docs/1-install-salesforce.md)
 1. Preferred, with the Salesforce CLI: sign in with "sf org login web --alias <alias>" (add --instance-url https://test.salesforce.com for a sandbox); I complete the sign-in in the browser.
 2. VALIDATE FIRST, changing nothing: sf project deploy start --metadata-dir <path to the downloaded file A> --single-package --target-org <alias> --dry-run --wait 10
-   Expect Succeeded with 48 components and 0 errors. If it fails, STOP and show me the failing component and reason. A known cause is "Field D365_Conversation_Id__c already exists": I must rename my own field first.
-3. After I approve, run the same command WITHOUT --dry-run (same file path). Leave the test level at its default (the package has no Apex code). Expect Succeeded, 48 components.
+   Expect Succeeded with 49 components and 0 errors. If it fails, STOP and show me the failing component and reason. A known cause is "Field D365_Conversation_Id__c already exists": I must rename my own field first.
+3. After I approve, run the same command WITHOUT --dry-run (same file path). Leave the test level at its default (the package has no Apex code). Expect Succeeded, 49 components.
 4. No CLI? Use Workbench (https://workbench.developerforce.com): choose Sandbox or Production, log in, migration > Deploy, choose file A, tick "Rollback On Error" and "Single Package", Next, Deploy, wait for Succeeded.
-5. Verify and report each item: objects Contact_Center_Call__c and D365_Contact_Center_Settings__c exist; Case has fields D365_Conversation_Id__c and D365_Call_Recording__c (check them with the Tooling API query from Phase 1; "sf sobject describe Case" will NOT list them until the permission set is assigned in Phase 4, which is normal); the flow D365CC_Create_Call_From_Case is ACTIVE (Tooling API: SELECT DeveloperName, ActiveVersionId FROM FlowDefinition WHERE DeveloperName='D365CC_Create_Call_From_Case', ActiveVersionId must not be empty); the permission set D365_Contact_Center_Call_Access exists; the Trusted URL D365_Contact_Center is active with endpoint https://*.dynamics.com (SELECT DeveloperName, IsActive, EndpointUrl FROM CspTrustedSite WHERE DeveloperName='D365_Contact_Center').
+5. Verify and report each item: objects Contact_Center_Call__c and D365_Contact_Center_Settings__c exist; Case has fields D365_Conversation_Id__c and D365_Call_Recording__c (check them with the Tooling API query from Phase 1; "sf sobject describe Case" will NOT list them until the permission set is assigned in Phase 4, which is normal); the flow D365CC_Create_Call_From_Case is ACTIVE (Tooling API: SELECT DeveloperName, ActiveVersionId FROM FlowDefinition WHERE DeveloperName='D365CC_Create_Call_From_Case', ActiveVersionId must not be empty); the permission set D365_Contact_Center_Call_Access exists; the two Trusted URLs are active: D365_Contact_Center (https://*.dynamics.com) and D365_CCaaS_Embed (https://ccaas-embed-prod.azureedge.net, which the D365 Contact Center panel in the Salesforce console needs) (SELECT DeveloperName, IsActive, EndpointUrl FROM CspTrustedSite WHERE DeveloperName IN ('D365_Contact_Center','D365_CCaaS_Embed')).
 
 PHASE 3 - SALESFORCE SETTINGS
 Write the org-level default of the custom setting "D365 Contact Center Settings". Run this Apex (sf apex run --file, or Developer Console > Execute Anonymous), with my real values and leaving out any line for a value I left blank:
@@ -311,6 +311,7 @@ Give me a table with every phase and its result, then: (1) anything I still have
 | Lightning components | `callTimeline`, `callRecordingModal` | The Call Journey card and the recording pop-up |
 | Lightning page | `Contact_Center_Call_Page` | Record page for calls: journey card + related Case + details |
 | Trusted URL | `D365_Contact_Center` | Lets Salesforce show `https://*.dynamics.com` in the pop-up |
+| Trusted URL | `D365_CCaaS_Embed` | Lets Salesforce show the Dynamics 365 Contact Center panel (`https://ccaas-embed-prod.azureedge.net`) in the console utility bar |
 | Permission set | `D365_Contact_Center_Call_Access` | Gives users access to all of the above |
 
 ### Dynamics 365 solution contents (`D365ContactCenterSalesforceCallJourney`, unmanaged)
@@ -341,7 +342,7 @@ The full list is in [docs/4-test-and-troubleshoot.md](docs/4-test-and-troublesho
 
 | Symptom | Fix |
 |---|---|
-| Pop-up says *"refused to connect"* | Make sure the Trusted URL `D365_Contact_Center` (`https://*.dynamics.com`, frame-src) is **active**: Setup → Trusted URLs. |
+| Pop-up says *"refused to connect"* | Make sure the Trusted URL `D365_Contact_Center` (`https://*.dynamics.com`, frame-src) is **active**: Setup → Trusted URLs. If the **D365 Contact Center panel** (softphone) shows a blocked icon instead, activate `D365_CCaaS_Embed` (`https://ccaas-embed-prod.azureedge.net`). |
 | Pop-up is empty / Play button missing | Fill in **D365 Contact Center Settings** (Step 1.3). |
 | *"Error loading control"* in the Evaluation pane, or an empty Transcript tab in the pop-up | Add the Conversation form fix (Step 2.3). |
 | No call record created | The Case has no `D365 Conversation ID`: check Step 3. Also check the running user has the permission set. |
@@ -389,7 +390,7 @@ When, and only when, the conversation is shown inside another site and the trans
 
 ## Uninstalling
 
-- **Salesforce:** delete the flow, the Lightning page, the components, the permission set, the custom setting, the Case fields and the `Contact_Center_Call__c` object (Setup → Object Manager). The Trusted URL can be deactivated.
+- **Salesforce:** delete the flow, the Lightning page, the components, the permission set, the custom setting, the Case fields and the `Contact_Center_Call__c` object (Setup → Object Manager). The two Trusted URLs (`D365_Contact_Center`, `D365_CCaaS_Embed`) can be deactivated.
 - **Dynamics 365:** remove the handler/library from the Conversation form (Step 2.3 in reverse), then delete the solution components (app, flow, web resource, connection references).
 - **Copilot Studio:** remove the *D365 Conversation ID* field from your Create Case action and delete the *D365 Context Variables* topic.
 
@@ -482,7 +483,7 @@ STEP 3 - ASSIGN USERS
 
 STEP 4 - TRUSTED URL
 1. Setup > Trusted URLs > New Trusted URL. API Name: D365_CCaaS_Embed. URL: https://ccaas-embed-prod.azureedge.net. Active: ticked. Context: All. Tick the CSP directives: frame-src, connect-src, img-src and style-src. Save. (Equivalent metadata: CspTrustedSite with endpointUrl https://ccaas-embed-prod.azureedge.net, isApplicableToFrameSrc/ConnectSrc/ImgSrc/StyleSrc true, isActive true, context All.)
-2. Also make sure my Dynamics 365 org URL (https://<my org>.crm.dynamics.com, plus the https://*.dynamics.com wildcard if my org uses a regional host) is an active Trusted URL for frame-src and connect-src. If the Salesforce package of this repo is installed it already contains https://*.dynamics.com (API name D365_Contact_Center), so check it first and do not add a duplicate.
+2. Also make sure my Dynamics 365 org URL (https://<my org>.crm.dynamics.com, plus the https://*.dynamics.com wildcard if my org uses a regional host) is an active Trusted URL for frame-src and connect-src. If the Salesforce package of this repo is installed it already contains BOTH Trusted URLs (D365_CCaaS_Embed and D365_Contact_Center, the latter for https://*.dynamics.com), so check first and do not add duplicates.
 3. VERIFY: SELECT DeveloperName, EndpointUrl, IsActive FROM CspTrustedSite (Tooling API) shows both URLs active.
 
 STEP 5 - UTILITY BAR (Open CTI softphone)
