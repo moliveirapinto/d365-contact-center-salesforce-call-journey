@@ -16,7 +16,7 @@ This project connects the two, so every phone call shows up in Salesforce with i
 
 **1. The IVR creates the Case, and the call shows up on it.** The Case header gets a *Call Recording & Transcript* link, and the feed shows *"Contact Center Call created"* with the call's time, channel, direction and caller.
 
-![Salesforce Case showing the Call Recording & Transcript link and the Contact Center Call entry in the feed](docs/images/salesforce-case.png)
+![Contact Center Call record with the Call Journey card, Recording & transcript button and call details](docs/images/salesforce-case.png)
 
 **2. Open the call to see its whole journey.** *Call received → Virtual agent → Voice queue → Agent answered → Call ended*, with durations, sentiment and caller number. One click on **Recording & transcript** opens the Dynamics 365 recording, transcript and quality evaluation in a pop-up inside Salesforce. The card has the same design as the [ServiceNow version](https://github.com/moliveirapinto/d365-contact-center-servicenow-call-journey).
 
