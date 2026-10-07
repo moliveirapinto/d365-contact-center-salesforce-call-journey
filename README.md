@@ -18,9 +18,9 @@ This project connects the two, so every phone call shows up in Salesforce with i
 
 ![Salesforce Case showing the Call Recording & Transcript link and the Contact Center Call entry in the feed](docs/images/salesforce-case.png)
 
-**2. Open the call to see its whole journey.** *Call received → Virtual agent → Voice queue → Agent answered → Call ended*, with durations, sentiment and caller number. One click on **▶ Play recording** or **Transcript** opens the Dynamics 365 recording, transcript and quality evaluation in a pop-up inside Salesforce.
+**2. Open the call to see its whole journey.** *Call received → Virtual agent → Voice queue → Agent answered → Call ended*, with durations, sentiment and caller number. One click on **Recording & transcript** opens the Dynamics 365 recording, transcript and quality evaluation in a pop-up inside Salesforce. The card has the same design as the [ServiceNow version](https://github.com/moliveirapinto/d365-contact-center-servicenow-call-journey).
 
-![Contact Center Call record with the Call Journey card, Play recording and Transcript buttons, and call details](docs/images/salesforce-call-journey.png)
+![Contact Center Call record with the Call Journey card, the Recording & transcript button, and call details](docs/images/salesforce-call-journey.png)
 
 **3. Play the recording without leaving Salesforce.** The pop-up shows the Dynamics 365 conversation: audio player with waveform, quality score trendline, transcript and call metrics. On the right is the **AI quality evaluation**: plan score, AI summary, suggested actions and every quality indicator with its reasoning.
 
@@ -51,8 +51,8 @@ This project connects the two, so every phone call shows up in Salesforce with i
 | Feature | What the agent sees |
 |---|---|
 | **Contact Center Call record** | One record per phone call, created automatically when the IVR opens a Case. Title reads like *"Phone call received on Fri, Sep 25 · 9:24 PM ET"*. It's linked to the Case and the Contact. |
-| **Call Journey card** | A visual timeline on the call record: *Call received → Virtual agent → Queue → Agent answered → Call ended*. It shows times, durations, sentiment and the caller's number. |
-| **▶ Play recording / Transcript buttons** | Open a large pop-up **inside Salesforce** showing the Dynamics 365 conversation: audio player, transcript, AI summary, call metrics and the **Quality Evaluation** side pane. |
+| **Call Journey card** | A visual timeline on top of the call record: *Call received → Virtual agent → Queue → Agent answered → Call ended*, with the call's date and time, status, durations, sentiment and the caller's number. Same design as the ServiceNow version. |
+| **Recording & transcript button** | Open a large pop-up **inside Salesforce** showing the Dynamics 365 conversation: audio player, transcript, AI summary, call metrics and the **Quality Evaluation** side pane. |
 | **Case link** | A *"Call Recording & Transcript"* link on the Case (optional; you add it to your Case layout). |
 | **Call details** | Queue, agent, talk/wait/handle time, sentiment and quality score, filled in automatically when the call ends. |
 
@@ -88,7 +88,7 @@ sequenceDiagram
     Agent->>Caller: Talks to the customer
     Note over D365: Call ends → recording, transcript,<br/>AI quality evaluation are produced
     D365->>SF: Sync flow updates the call record<br/>(times, queue, agent, sentiment, quality)
-    Agent->>SF: Opens call record → ▶ Play recording
+    Agent->>SF: Opens call record → Recording & transcript
     SF->>D365: Pop-up shows the D365 conversation<br/>(recording · transcript · evaluation)
 ```
 
@@ -249,7 +249,7 @@ Ask me to call my Contact Center number, ask the IVR for an agent, answer in the
 - A new Case exists with the conversation id filled: SELECT CaseNumber, D365_Conversation_Id__c FROM Case ORDER BY CreatedDate DESC LIMIT 5
 - Within seconds a Contact_Center_Call__c record exists, linked to that Case, with status In progress: SELECT Id, Name FROM Contact_Center_Call__c ORDER BY CreatedDate DESC LIMIT 5, then open it.
 - 1 to 2 minutes after the call ends the record shows status Completed with queue, agent, talk and wait time and sentiment (the quality score fills in once Dynamics 365 has produced the evaluation).
-- In Salesforce open the call record: the Call Journey card shows, and "Play recording" opens a large pop-up with the Dynamics 365 recording player, the Transcript tab with text, and the Quality Evaluation side pane WITHOUT the message "Error loading control".
+- In Salesforce open the call record: the Call Journey card shows, and the "Recording & transcript" button opens a large pop-up with the Dynamics 365 recording player, the Transcript tab with text, and the Quality Evaluation side pane WITHOUT the message "Error loading control".
 If something is missing, use the Troubleshooting section of the README and docs/4-test-and-troubleshoot.md. Look first at the sync flow's run history in Power Automate (a run ending in "No_Salesforce_case_for_this_call" is normal for calls that did not come through the IVR), then at Setup > Paused and Failed Flow Interviews in Salesforce. Report what you find. Do not change anything else without asking me.
 
 STOP AND ASK ME WHENEVER

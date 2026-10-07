@@ -6,72 +6,41 @@ import { NavigationMixin } from 'lightning/navigation';
 import CallRecordingModal from 'c/callRecordingModal';
 import LOCALE from '@salesforce/i18n/locale';
 import TIME_ZONE from '@salesforce/i18n/timeZone';
+import { iconSrc } from './icons';
 
 const O = 'Contact_Center_Call__c';
 const FIELDS = [
     'Name', 'Status__c', 'Call_Received__c', 'Agent_Connected__c', 'Call_Ended__c', 'Queue__c', 'Agent__c',
     'Customer_Sentiment__c', 'Caller_Phone__c', 'Talk_Time_Seconds__c', 'Wait_Time_Seconds__c',
-    'Total_Duration_Seconds__c', 'Virtual_Agent_Seconds__c', 'Recording_Url__c', 'Handled_By_Virtual_Agent__c',
-    'Quality_Score__c', 'Quality_Plan__c', 'Quality_Summary__c', 'Quality_Action_Plan__c', 'Quality_Evaluation_Json__c', 'Quality_Evaluated_At__c'
+    'Total_Duration_Seconds__c', 'Virtual_Agent_Seconds__c', 'Recording_Url__c'
 ].map((f) => `${O}.${f}`);
 const LIVE_POLL_MS = 15000;
 
+// Same palette as the ServiceNow call journey (Fluent 2).
+const BRAND = '#0f6cbd';
+const OK = '#107c10';
+const BAD = '#b10e1c';
+const WARN = '#9d5d00';
+const TEXT2 = '#616161';
+const TEXT3 = '#8a8a8a';
+
+// sentiment label -> [icon, tone colour]
 const SENTIMENT = {
-    Positive: ['😊', 'good'], 'Slightly positive': ['🙂', 'good'], Neutral: ['😐', 'neutral'],
-    'Slightly negative': ['🙁', 'bad'], Negative: ['😟', 'bad']
+    'Very positive': ['happy', OK], Positive: ['happy', OK], 'Slightly positive': ['smile', OK],
+    Neutral: ['neutral', TEXT2],
+    'Slightly negative': ['sad', WARN], Negative: ['sad', BAD], 'Very negative': ['angry', BAD]
 };
 
 const secs = (n) => {
     if (n === null || n === undefined || n === '') return null;
     const v = Math.round(Number(n));
-    return v < 60 ? `${v}s` : `${Math.floor(v / 60)}m ${String(v % 60).padStart(2, '0')}s`;
+    if (v < 60) return `${v}s`;
+    const m = Math.floor(v / 60);
+    const s = String(v % 60).padStart(2, '0');
+    return m < 60 ? `${m}m ${s}s` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
 };
 const time = (iso) => (iso ? new Date(iso).toLocaleTimeString(LOCALE, { timeZone: TIME_ZONE, hour: 'numeric', minute: '2-digit' }) : '');
-
-// D365 Quality Evaluation bands: >= 71 Good, >= 41 Fair, else Poor.
-const scoreBand = (s) => (s >= 71 ? ['Good', 'good', '#2e844a'] : s >= 41 ? ['Fair', 'fair', '#d97706'] : ['Poor', 'poor', '#ba0517']);
-const BAND_CLASS = { Normal: 'good', Warning: 'fair', Critical: 'poor' };
-
-function parseQuality(v) {
-    const score = v('Quality_Score__c');
-    if (score === null || score === undefined) return null;
-    const [label, tone, color] = scoreBand(score);
-    let indicators = [];
-    try {
-        const j = JSON.parse(v('Quality_Evaluation_Json__c') || '{}');
-        indicators = ((j.evaluation_result && j.evaluation_result.responses) || []).map((r, i) => {
-            const q = (r.questionInfo && r.questionInfo[0]) || {};
-            const t = BAND_CLASS[r.matchedBandLabel] || scoreBand(r.monitorScore)[1];
-            return {
-                key: r.monitorId || String(i),
-                name: r.monitorName,
-                score: r.monitorScore,
-                band: r.matchedBandLabel || scoreBand(r.monitorScore)[0],
-                pillClass: `ind-pill ind-${t}`,
-                barStyle: `width:${Math.max(3, Math.min(100, r.monitorScore))}%`,
-                barClass: `ind-bar-fill ind-${t}`,
-                question: (q.questionText || '').trim(),
-                answer: (q.answerText || '').trim(),
-                reason: (q.reason || '').trim()
-            };
-        });
-    } catch (e) {
-        indicators = [];
-    }
-    return {
-        score,
-        label,
-        pillClass: `qa-band qa-${tone}`,
-        ringStyle: `background: conic-gradient(${color} ${score * 3.6}deg, #ecebea 0deg)`,
-        plan: v('Quality_Plan__c') || 'Quality evaluation',
-        evaluatedAt: time(v('Quality_Evaluated_At__c')),
-        summary: v('Quality_Summary__c'),
-        actionPlan: v('Quality_Action_Plan__c'),
-        indicators,
-        indicatorCount: indicators.length,
-        attention: indicators.filter((x) => x.score < 71).length
-    };
-}
+const dateLong = (iso) => new Date(iso).toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
 export default class CallTimeline extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -98,17 +67,8 @@ export default class CallTimeline extends NavigationMixin(LightningElement) {
         return this.isCallRecord ? this.recordId : undefined;
     }
 
-    get cardTitle() {
-        if (!this.isCallRecord) return 'Call Timeline';
-        return (this.records[0] && this.records[0].fields.Name && this.records[0].fields.Name.value) || 'Call Journey';
-    }
-
-    get cardSubtitle() {
-        return this.isCallRecord ? 'Call journey · Dynamics 365 Contact Center' : 'Dynamics 365 Contact Center';
-    }
-
-    get showCount() {
-        return this.hasCalls && !this.isCallRecord;
+    get showListHeader() {
+        return !this.isCallRecord;
     }
 
     get showDetailsLink() {
@@ -177,68 +137,68 @@ export default class CallTimeline extends NavigationMixin(LightningElement) {
     get calls() {
         return [...this.records]
             .map((r) => this.toView(r))
-            .sort((a, b) => (b.received || '').localeCompare(a.received || ''));
+            .sort((a, b) => (b.received || '').localeCompare(a.received || ''))
+            .map((c, i) => ({ ...c, wrapClass: i ? 'call call-next' : 'call' }));
     }
 
     toView(r) {
         const v = (f) => r.fields[f] && r.fields[f].value;
         const received = v('Call_Received__c');
-        const d = received ? new Date(received) : null;
+        const connected = v('Agent_Connected__c');
         const done = v('Status__c') === 'Completed';
         const sentiment = v('Customer_Sentiment__c');
-        const [emoji, tone] = SENTIMENT[sentiment] || ['', 'neutral'];
-        const agent = v('Agent__c');
+        const [sentIcon, sentColor] = SENTIMENT[sentiment] || ['neutral', TEXT2];
+        const wait = secs(v('Wait_Time_Seconds__c'));
+        const sep = LOCALE.toLowerCase().startsWith('en') ? ' at ' : ' · ';
 
-        const steps = [
-            { key: 'in', icon: 'utility:incoming_call', label: 'Call received', meta: time(received), state: 'done' },
-            {
-                key: 'va', icon: 'utility:einstein', label: 'Virtual agent',
-                meta: secs(v('Virtual_Agent_Seconds__c')) || (done ? '' : 'handled'), state: 'done'
-            },
-            {
-                key: 'q', icon: 'utility:hourglass', label: `${v('Queue__c') || 'Voice'} queue`,
-                meta: secs(v('Wait_Time_Seconds__c')) ? `wait ${secs(v('Wait_Time_Seconds__c'))}` : '', state: v('Agent_Connected__c') || done ? 'done' : 'active'
-            },
-            {
-                key: 'ag', icon: 'utility:agent_session', label: agent || 'Agent',
-                meta: v('Agent_Connected__c') ? `answered ${time(v('Agent_Connected__c'))}` : done ? '' : 'connecting…',
-                state: done ? 'done' : v('Agent_Connected__c') ? 'active' : 'active'
-            },
-            {
-                key: 'end', icon: done ? 'utility:end_call' : 'utility:record', label: done ? 'Call ended' : 'In progress',
-                meta: done ? time(v('Call_Ended__c')) : 'live', state: done ? 'done' : 'live'
-            }
-        ].map((s) => ({ ...s, cls: `step step-${s.state}` }));
+        // [icon, label, meta, state] with state: done | active | live | pending
+        const raw = [
+            ['call_inbound', 'Call received', time(received), 'done'],
+            ['bot', 'Virtual agent', secs(v('Virtual_Agent_Seconds__c')) || (done ? '' : 'handling'), 'done'],
+            ['queue', `${v('Queue__c') || 'Voice'} queue`, wait ? `waited ${wait}` : '', connected || done ? 'done' : 'active'],
+            ['headset', v('Agent__c') || 'Agent', connected ? `answered ${time(connected)}` : done ? '' : 'connecting', done ? 'done' : connected ? 'active' : 'pending'],
+            [done ? 'check' : 'live', done ? 'Call ended' : 'In progress', done ? time(v('Call_Ended__c')) : 'live', done ? 'done' : 'live']
+        ];
+        const iconColor = { done: '#ffffff', live: BAD, active: BRAND, pending: TEXT3 };
+        const steps = raw.map(([icon, label, meta, state], i) => ({
+            key: `${r.id}-${i}`,
+            icon: iconSrc(icon, iconColor[state]),
+            label,
+            meta,
+            dotClass: `dot dot-${state}`,
+            hasConnector: i > 0,
+            // a connector is filled once the step it leads to has been reached
+            connClass: i > 0 && (i < 3 || (i === 3 && (connected || done)) || (i === 4 && done)) ? 'conn conn-on' : 'conn'
+        }));
 
         return {
             id: r.id,
             name: v('Name'),
             recordUrl: `/lightning/r/${O}/${r.id}/view`,
             received,
-            receivedTs: received ? Date.parse(received) : null,
-            month: d ? d.toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, month: 'short' }).toUpperCase() : '',
-            day: d ? d.toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, day: 'numeric' }) : '',
-            weekday: d ? d.toLocaleDateString(LOCALE, { timeZone: TIME_ZONE, weekday: 'short' }).toUpperCase() : '',
+            whenFull: received ? `${dateLong(received)}${sep}${time(received)}` : '',
             statusLabel: done ? 'Completed' : 'Live',
             statusClass: done ? 'status status-done' : 'status status-live',
+            headerIcon: iconSrc('call_inbound', BRAND),
+            playIcon: iconSrc('play', '#ffffff'),
+            openIcon: iconSrc('open', TEXT2),
+            timerIcon: iconSrc('timer', BRAND),
+            micIcon: iconSrc('mic', BRAND),
+            phoneIcon: iconSrc('phone', BRAND),
+            sentimentIcon: iconSrc(sentIcon, sentColor),
             steps,
-            total: secs(v('Total_Duration_Seconds__c')) || (done ? '—' : 'live'),
+            total: secs(v('Total_Duration_Seconds__c')) || (done ? '-' : 'Live'),
             talk: secs(v('Talk_Time_Seconds__c')),
             sentiment,
-            sentimentEmoji: emoji,
-            sentimentClass: `chip sentiment sentiment-${tone}`,
             phone: v('Caller_Phone__c'),
-            agentName: agent,
-            quality: parseQuality(v),
-            showQuality: this.isCallRecord && !!parseQuality(v),
+            agentName: v('Agent__c'),
             url: v('Recording_Url__c')
         };
     }
 
     openRecording(event) {
         event.preventDefault();
-        const { id, mode } = event.currentTarget.dataset;
-        const c = this.calls.find((x) => x.id === id);
+        const c = this.calls.find((x) => x.id === event.currentTarget.dataset.id);
         if (!c || !c.url) return;
         const when = c.received
             ? new Date(c.received).toLocaleString(LOCALE, { timeZone: TIME_ZONE, weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -246,7 +206,7 @@ export default class CallTimeline extends NavigationMixin(LightningElement) {
         CallRecordingModal.open({
             size: 'full',
             url: c.url,
-            label: mode === 'transcript' ? 'Call transcript' : 'Call recording',
+            label: 'Call recording and transcript',
             subtitle: [when, c.agentName, 'Dynamics 365 Contact Center'].filter(Boolean).join(' · '),
             description: 'Dynamics 365 Contact Center conversation'
         });

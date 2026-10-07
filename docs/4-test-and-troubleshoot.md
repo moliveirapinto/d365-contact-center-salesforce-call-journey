@@ -7,7 +7,7 @@
    Its title looks like: *Phone call received on Fri, Sep 25 · 9:24 PM ET*, status **In progress**.
 3. **Answer** the call in the D365 widget, talk for a bit, then **end** the call and close the conversation.
 4. About **1–2 minutes** later, open the call record. The **Call Journey** card now shows the queue, the agent, talk/wait time and sentiment, with status **Completed**. The quality score fields fill in once D365 has produced the evaluation.
-5. Click **▶ Play recording**. A large pop-up opens with the Dynamics 365 conversation: audio player, transcript, summary, and on the right the **Quality Evaluation** pane.
+5. Click **Recording & transcript**. A large pop-up opens with the Dynamics 365 conversation: audio player, transcript, summary, and on the right the **Quality Evaluation** pane.
 
 🎉 **It works!**
 
@@ -38,7 +38,7 @@
 | Symptom | Fix |
 |---|---|
 | *"&lt;your-org&gt;.crm.dynamics.com refused to connect"* or a blank frame | Setup → **Trusted URLs** → `D365_Contact_Center` must be **Active** with **frame-src** ticked. |
-| No *Play recording* button | The **D365 Contact Center Settings** → *Dynamics 365 URL* is empty (Step 1.3). |
+| No *Recording & transcript* button | The **D365 Contact Center Settings** → *Dynamics 365 URL* is empty (Step 1.3). |
 | *"You don't have access to this app"* | Share the **Contact Center Call Review** app with the agent's security role (Step 2.4). |
 | Microsoft sign-in page inside the pop-up | Sign in to Dynamics 365 once in another browser tab, then reopen the pop-up. |
 | Browser console shows *"Refused to frame … frame-ancestors"* | Your Dynamics 365 environment enforces a content security policy. In the Power Platform admin center → your environment → **Settings** → **Privacy + Security** → **Content security policy**, add `https://*.lightning.force.com` and `https://*.my.salesforce.com` to the allowed frame ancestors for model-driven apps. |
