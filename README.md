@@ -177,13 +177,11 @@ Use **Option A** for new installs. Use **Option B** if you already run the class
 
 *The Edge widget opened from **Contact Center** in the Service Console utility bar (1000 × 800, layout `compact`), with the Copilot pane open (header Copilot icon, top right of the widget). The record stays open behind it.*
 
-> ⚠️ **Step 1 needs a link that is not in this repo.** The Salesforce package is installed from a link that contains a package version ID (`04t…`, 18 characters). Microsoft has not published it, so the `04t...` you see in Microsoft's guide is a **placeholder, not a truncated ID**, and the copy button copies the placeholder. Ask your Microsoft representative for **"the current D365ContactCenter install URL for a Developer Edition org or sandbox"** *before* you start. Everything else in Option A you can do from this repo. Without that link, use [Option B](#option-b-install-the-classic-salesforce-connector), which needs no package link.
-
 **What you install**
 
 | # | What | Where it comes from |
 |---|---|---|
-| 1 | The **D365 Contact Center Edge** Salesforce package (Lightning component `d365EdgeContainer`) | The install link (`04t…`) from **your Microsoft representative** (it is **not** in this repo; see the warning above). Microsoft's own [install guide](salesforce-edge/MICROSOFT-INSTALL-GUIDE.md) is in this repo. During the beta the package installs in **Developer Edition orgs and sandboxes only**. |
+| 1 | The **D365 Contact Center Edge** Salesforce package (Lightning component `d365EdgeContainer`) | The install link (`04t…`) from **your Microsoft representative**. Microsoft's own [install guide](salesforce-edge/MICROSOFT-INSTALL-GUIDE.md) is in this repo. During the beta the package installs in **Developer Edition orgs and sandboxes only**. |
 | 2 | **Two Trusted Sites** (Pulse portal with microphone, and Microsoft sign-in) | [`salesforce-edge/D365ContactCenter_Edge_Config_Salesforce.zip`](salesforce-edge) in this repo |
 | 3 | The widget on the **utility bar** | Setup steps below; a ready-made example in [`salesforce-edge/examples/`](salesforce-edge/examples) |
 | 4 | The **Dynamics 365 side** (voice channel, agents, content security policy) | Same checklist as Option B, STEP 6 of the [classic prompt](#option-b-install-the-classic-salesforce-connector) |
