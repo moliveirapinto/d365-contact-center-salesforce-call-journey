@@ -160,14 +160,12 @@ Salesforce can show the Dynamics 365 Contact Center panel in two ways. The call 
 |---|---|---|
 | Panel | New "Edge" agent desktop, served from the Microsoft Pulse portal (`portal.us.contactcenterai.powerplatform.com`) | Older widget served from `ccaas-embed-prod.azureedge.net` |
 | Installed as | A Salesforce package (an install link from your Microsoft contact) plus the config in this repo | A Call Center plus the Open CTI softphone utility item |
-| Where it sits | Utility bar (bottom of every page) | Utility bar |
+| Where it sits | Utility bar (bottom of every page) or docked on a record page | Utility bar only |
 | Copilot panel | Yes (use the layout preset `compact`) | Limited |
 | Native Salesforce click-to-dial | Optional extra step (Open CTI) | Yes |
 | Contact screen pop | Needs the small [screen-pop add-on](salesforce-edge/screen-pop) in this repo | Built in |
 
 Use **Option A** for new installs. Use **Option B** if you already run the classic connector or need the built-in screen pop today.
-
-> The same Edge desktop also runs in **ServiceNow**, with no Microsoft package or `04t` link: see the [ServiceNow call journey](https://github.com/moliveirapinto/d365-contact-center-servicenow-call-journey) (release 1.0.3), where a small ServiceNow page answers the portal's start-up handshake the way `d365EdgeContainer` does here.
 
 ---
 
@@ -175,15 +173,15 @@ Use **Option A** for new installs. Use **Option B** if you already run the class
 
 ![Salesforce Service Console with the Contact Center Edge widget open from the utility bar, showing the inbox and the Copilot panel](docs/images/edge-utility-bar.png)
 
-*The Edge widget opened from **Contact Center** in the Service Console utility bar (1000 × 800, layout `compact`), with the Copilot pane open (header Copilot icon, top right of the widget). The record stays open behind it.*
+*The Edge widget in the Service Console utility bar, with the Copilot panel open (header Copilot icon, top right of the widget).*
 
 **What you install**
 
 | # | What | Where it comes from |
 |---|---|---|
-| 1 | The **D365 Contact Center Edge** Salesforce package (Lightning component `d365EdgeContainer`) | The install link (`04t…`) from **your Microsoft representative**. Microsoft's own [install guide](salesforce-edge/MICROSOFT-INSTALL-GUIDE.md) is in this repo. During the beta the package installs in **Developer Edition orgs and sandboxes only**. |
+| 1 | The **D365 Contact Center Edge** Salesforce package (Lightning component `d365EdgeContainer`) | The install link (`04t…`) that **your Microsoft contact** gives you. It is not in this repo. |
 | 2 | **Two Trusted Sites** (Pulse portal with microphone, and Microsoft sign-in) | [`salesforce-edge/D365ContactCenter_Edge_Config_Salesforce.zip`](salesforce-edge) in this repo |
-| 3 | The widget on the **utility bar** | Setup steps below; a ready-made example in [`salesforce-edge/examples/`](salesforce-edge/examples) |
+| 3 | The widget on the **utility bar** (and optionally a **docked** record page) | Setup steps below; ready-made examples in [`salesforce-edge/examples/`](salesforce-edge/examples) |
 | 4 | The **Dynamics 365 side** (voice channel, agents, content security policy) | Same checklist as Option B, STEP 6 of the [classic prompt](#option-b-install-the-classic-salesforce-connector) |
 | 5 | The **screen-pop add-on** (opens the matching Salesforce Contact when a call is accepted) | [`salesforce-edge/screen-pop/`](salesforce-edge/screen-pop): one Apex class, plus a small patch if you deploy the container from source |
 | 6 | The **call journey** packages | The rest of this README, unchanged |
@@ -195,8 +193,8 @@ Use **Option A** for new installs. Use **Option B** if you already run the class
 | Org URL | `https://<your org>.crm.dynamics.com` | Your Dynamics 365 environment |
 | Edge URL | `https://portal.us.contactcenterai.powerplatform.com/experience/agent` | Use the regional portal URL your Microsoft contact gives you |
 | **Layout Preset** | **`compact`** | `embedded` shows only the inbox and conversation, **with no Copilot panel**; `compact` and `full` include it |
-| Screen Pop Mode | `navigate` | Opens the matching record in a console tab |
-| Utility item label / size | `Contact Center`, width 1000, height 800, **Preload component** on | A tall panel is needed for the conversation and Copilot side by side. |
+| Screen Pop Mode | `navigate` (utility bar) or `publish` (docked page) | See below |
+| Utility item label / size | `Contact Center`, width 1000, height 800, **Preload component** on | A tall panel is needed for the conversation and Copilot side by side |
 
 **Need help installing the Edge widget? Let an AI assistant do it.** Paste the prompt below into **Claude** (with browser or computer use), **Claude Code** or a similar agent. You sign in yourself, including MFA.
 
@@ -206,12 +204,12 @@ Use **Option A** for new installs. Use **Option B** if you already run the class
 You are a Salesforce installation engineer. Install the "Dynamics 365 Contact Center Edge" widget in MY Salesforce org so the Dynamics 365 Contact Center panel opens in the Service Console utility bar. Work carefully, change only what is listed, and verify every step.
 
 REFERENCE
-- This repository (https://github.com/moliveirapinto/d365-contact-center-salesforce-call-journey) is context only. The folder salesforce-edge/ holds the Trusted Sites zip and an example utility bar file. The widget goes in the utility bar only; do not add it to record pages.
+- This repository (https://github.com/moliveirapinto/d365-contact-center-salesforce-call-journey) is context only. The folder salesforce-edge/ holds the Trusted Sites zip and example utility bar / docked page files.
 - Microsoft's installation guide for the Edge widget (the INSTALL guide that comes with the package) is the source of truth. If anything below disagrees with it, follow Microsoft, tell me what differs, and continue.
 - Tested values: Edge URL https://portal.us.contactcenterai.powerplatform.com/experience/agent (use my regional portal URL if my Microsoft contact gave me a different one). Layout Preset: compact. Screen Pop Mode: navigate. Utility item: label "Contact Center", width 1000, height 800, preload (eager) on, icon call.
 
 STEP 0 - ASK ME, THEN WAIT
-Ask: (1) Which Salesforce org (Developer Edition, sandbox or production) and its login URL? (2) Which Lightning app gets the utility item (for example Service Console)? (3) My Dynamics 365 URL (https://<org>.crm.dynamics.com)? (4) The package install link (the 04t package version ID, or the full https://login.salesforce.com/packaging/installPackage.apexp?p0=04t... URL) that my Microsoft representative gave me, and my regional Pulse portal URL if it is not the one above. If I do not have a link, tell me to ask my Microsoft representative for the current D365ContactCenter install URL, and STOP. (5) Which users should see the widget? (6) Can you use the Salesforce CLI (sf) or a browser, or should you guide me click by click? Then STOP and wait. If this is production, say so and get my explicit "yes" before changing anything.
+Ask: (1) Which Salesforce org (Developer Edition, sandbox or production) and its login URL? (2) Which Lightning app gets the utility item (for example Service Console)? (3) My Dynamics 365 URL (https://<org>.crm.dynamics.com)? (4) The package install link (starts with 04t, or a https://<domain>/packaging/installPackage.apexp?p0=04t... URL) that my Microsoft contact gave me, and my regional Pulse portal URL if it is not the one above. (5) Which users should see the widget? (6) Can you use the Salesforce CLI (sf) or a browser, or should you guide me click by click? Then STOP and wait. If this is production, say so and get my explicit "yes" before changing anything.
 
 STEP 1 - BACKUP AND CHECK (read only)
 1. Sign-in: I sign in myself (MFA included).
@@ -219,11 +217,9 @@ STEP 1 - BACKUP AND CHECK (read only)
 3. Check what is already installed: Setup > Installed Packages, and whether the Lightning component d365EdgeContainer exists (sf data query -q "SELECT DeveloperName FROM LightningComponentBundle WHERE DeveloperName = 'd365EdgeContainer'" --use-tooling-api). If it is already installed, skip STEP 2.
 4. If the org already has a Call Center for D365 or an Open CTI softphone utility item (the classic connector), ask me whether to keep it or remove it. Never run both: they would open two panels and ring twice.
 
-STEP 2 - INSTALL THE EDGE PACKAGE (Microsoft's "D365ContactCenter" unlocked package)
-1. Rules from Microsoft's guide (salesforce-edge/MICROSOFT-INSTALL-GUIDE.md in the repository): during the beta the package installs only in a Developer Edition org or a sandbox, not production; use only the install link I give you (older links from before 2026-05-21 return "package not found"); the installer needs the System Administrator profile.
-2. Build the install URL from the 04t package version ID I gave you in STEP 0 (or use the full URL as it is): https://login.salesforce.com/packaging/installPackage.apexp?p0=<04t ID> . For a sandbox, use test.salesforce.com instead of login.salesforce.com. If the org has a My Domain, the same path on my org's domain also works.
-3. Open it in the browser while signed in as me. The installer lists seven Lightning Web Components (d365EdgeContainer, d365EdgeBridge, d365AdapterDetector, d365CrmAdapterBase, d365LightningAdapter, d365ConsoleAdapter, d365OpenCTIAdapter) plus a data-access notice. READ the notice to me in one or two sentences (the component exchanges selected contact-center context, such as screen pop, call and presence events, between Salesforce and Dynamics 365 for the configured orgs and signed-in users) and wait for my "yes". Then choose "Install for All Users" (or "Install for Admins Only" if I say so), approve "Third-Party Access" (it only informs that the widget talks to Microsoft sign-in and my Dynamics 365), click Install, and wait. Installation usually takes under 5 minutes; Salesforce also emails when it is done.
-4. VERIFY: Setup > Installed Packages lists "D365ContactCenter", and the Lightning component d365EdgeContainer exists. If the install says "package not found" or "beta package cannot be installed in this org", STOP and tell me: the link is outdated, or the org is production; I must ask my Microsoft contact for the current link or use a sandbox.
+STEP 2 - INSTALL THE EDGE PACKAGE
+Open the install link I gave you while signed in to my org, choose "Install for Admins Only" (or the profiles I name), approve any third-party access, and wait for "Installation complete". VERIFY: Setup > Installed Packages lists it, and the Lightning component d365EdgeContainer exists. If I have no link, STOP and tell me to ask my Microsoft contact: the package is not public.
+
 STEP 3 - TRUSTED SITES (microphone is required for voice)
 Download this zip (do NOT unzip) and deploy it with sf project deploy start --metadata-dir <zip> --target-org <alias>: https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/salesforce-edge/D365ContactCenter_Edge_Config_Salesforce.zip . Or create them in Setup > Trusted URLs:
 1. D365ContactCenterEdge: https://portal.us.contactcenterai.powerplatform.com (use my regional URL if different). Active. Directives: frame-src, connect-src, img-src, media-src, and "Allow site to use microphone in Lightning Experience and Salesforce app pages" checked.
@@ -232,7 +228,7 @@ Download this zip (do NOT unzip) and deploy it with sf project deploy start --me
 VERIFY: SELECT DeveloperName, EndpointUrl, IsActive FROM CspTrustedSite shows them active.
 
 STEP 4 - UTILITY BAR
-Setup > App Manager > my app > Edit > Utility Items > Add Utility Item > Custom > Lightning Component "d365EdgeContainer" (label shows as D365 Contact Center Edge). Set: Label "Contact Center", Icon "call", Panel Width 1000, Panel Height 800, Start automatically (preload) ON. Component properties: Org URL = my Dynamics 365 URL (no trailing slash), Edge URL = the portal URL, Layout Preset = compact, Screen Pop Mode = navigate, Enable Host API = on (leave it), Host API Instance ID = D365EdgePrimary, Host API Allowed Events = screenPop.requested, Host API Allowed Requests = blank (add command:clickToDial only if I choose click-to-dial in STEP 6C), Verbose Logging = off. (Microsoft's guide suggests a 480 x 600 panel; we use 1000 x 800 because the Copilot panel needs the room. Never go below 545 high.) Keep the other utility items. Save.
+Setup > App Manager > my app > Edit > Utility Items > Add Utility Item > Custom > Lightning Component "d365EdgeContainer" (label shows as D365 Contact Center Edge). Set: Label "Contact Center", Icon "call", Panel Width 1000, Panel Height 800, Start automatically (preload) ON. Component properties: Org URL = my Dynamics 365 URL (no trailing slash), Edge URL = the portal URL, Layout Preset = compact, Screen Pop Mode = navigate. Keep the other utility items. Save.
 VERIFY: reload the app; "Contact Center" is in the utility bar.
 
 STEP 5 - DYNAMICS 365 SIDE
@@ -241,20 +237,21 @@ Do the same checks as STEP 6 of the classic prompt in the repository README (Con
 STEP 6 - FIRST SIGN-IN AND CHECK
 1. Tell me to hard-refresh Salesforce (Ctrl+Shift+R) and click "Contact Center" in the utility bar.
 2. Expected: the panel opens, shows "Connecting..." then "Sign in with Microsoft". I click it; a Microsoft pop-up opens; after sign-in the panel shows the status "Connected" and the Contact Center workspace (inbox, presence, Copilot icon).
-3. IMPORTANT, tell me this: Edge keeps loading for about 30 seconds after the panel first opens, even when it already shows "No active conversations". Until then the "Open Copilot" button and the Copilot icon in the widget's header (top right) do nothing; after that both open the Copilot pane ("What can I help with?"). The browser console message "Creating a worker from 'blob:...' violates the following Content Security Policy directive" also comes from Microsoft's portal itself; ignore it unless voice calls fail.
+3. IMPORTANT, tell me this: the "Open Copilot" button on the empty "No active conversations" screen does nothing in the current Microsoft preview. To open Copilot, click the Copilot icon in the widget's header (top right).
 4. Troubleshooting: blocked icon or CSP error in the browser console = a Trusted Site is missing or inactive; sign-in pop-up blocked = allow pop-ups for the Salesforce domain; the microphone prompt appears on the first voice call (Allow); a panel with no Copilot at all = Layout Preset is "embedded", change it to "compact".
 
 STEP 6B - CONTACT SCREEN POP (ask me first; skip if I say no)
 Explain: the Edge widget sends the Dynamics 365 customer, not a Salesforce Id, so without this add-on no Salesforce Contact opens when a call is accepted. If I want it: (1) download the Apex files https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/salesforce-edge/screen-pop/classes/D365ScreenPopResolver.cls , D365ScreenPopResolver.cls-meta.xml , D365ScreenPopResolverTest.cls and D365ScreenPopResolverTest.cls-meta.xml (same folder) into a folder classes/ of a Salesforce project, and deploy them (sf project deploy start --source-dir classes --target-org <alias>) and give the users access to the class D365ScreenPopResolver; (2) if the d365EdgeContainer component was deployed from source, apply https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/salesforce-edge/screen-pop/container-patch.js to its JavaScript and redeploy it; if it came from Microsoft's package (cannot be edited), tell me to use the package's host API with Screen Pop Mode "publish" as described in Microsoft's INSTALL guide, and stop there. VERIFY with a test Contact whose phone matches a Dynamics 365 contact, per salesforce-edge/screen-pop/README.md.
 
-STEP 6C - NATIVE CLICK-TO-DIAL (optional; ask me first, skip if I say no)
-Explain: without this, phone numbers in Salesforce say "click to dial disabled". Follow Step 6 of salesforce-edge/MICROSOFT-INSTALL-GUIDE.md exactly: (1) Setup > Call Centers > "Dynamics 365 Contact Center Edge" (D365EdgeCallCenter) > Manage Call Center Users > add my agents; (2) create and assign a Softphone Layout (Setup > Softphone Layouts) to their profiles; (3) add the standard "Open CTI Softphone" utility item to the same app; (4) add the "D365 Edge CTI Bridge" utility item to the same app; (5) on the Contact Center utility item set Host API Instance ID = D365EdgePrimary and add command:clickToDial to Host API Allowed Requests, keep Enable Host API on; (6) reload and test by clicking a phone field on a Contact. Note for me: a real outbound call also needs a voice capacity/channel profile for the agent in Dynamics 365.
-
 STEP 7 - FINAL REPORT
-Give me a table: item (package, trusted sites, utility item, Dynamics 365 side, first sign-in, screen pop, click-to-dial) / status (OK, WARNING, FAILED) / what you saw. List what you changed, where the backup is, and how to roll back (restore the saved utility bar, delete the two Trusted Sites, uninstall the package). Then tell me the next step: install the call journey packages ("Let an AI assistant install it for you").
+Give me a table: item (package, trusted sites, utility item, Dynamics 365 side, first sign-in, screen pop) / status (OK, WARNING, FAILED) / what you saw. List what you changed, where the backup is, and how to roll back (restore the saved utility bar, delete the two Trusted Sites, uninstall the package). Then tell me the next step: install the call journey packages ("Let an AI assistant install it for you").
 
 START with STEP 0.
 ````
+
+**Optional: dock the widget on a record page.** Instead of (or besides) the utility bar, drag `d365EdgeContainer` into the sidebar of a record page in Lightning App Builder (Contact, Case, Account), with Screen Pop Mode `publish`, Container Height `70vh`, Min Height `545px`. Example page: [`salesforce-edge/examples/Contact_Edge_Docked.flexipage-meta.xml`](salesforce-edge/examples/Contact_Edge_Docked.flexipage-meta.xml). A docked panel only exists on the pages you add it to; the utility bar is the only placement that is on every page, so do not run both for the same agents.
+
+![Edge widget docked in the sidebar of a Contact record page](docs/images/edge-docked.png)
 
 #### What changes with the Edge widget
 
@@ -265,7 +262,7 @@ Everything the call journey does keeps working: the call records, Case creation,
 | **Contact screen pop** | The classic widget searches Salesforce by phone number and opens the matching Contact. | The Edge widget sends the **Dynamics 365** customer (type and a Dynamics 365 ID), not a Salesforce ID. Install the [screen-pop add-on](salesforce-edge/screen-pop): it reads the customer's phone and email from Dynamics 365, finds the Salesforce Contact or Account (phone, then email, then unique name) and opens it. Tested with a simulated call event in a Developer Edition org. With Microsoft's package you wire it through the host API; with a source-deployed container you apply a small patch. |
 | **Click-to-dial** | Works out of the box. | Native phone fields say "click to dial disabled" until you complete the optional Open CTI step in Microsoft's guide. |
 | **Panel size** | The CTI panel enlarger extra resizes it. | The enlarger does nothing; size comes from the utility item (1000 × 800). |
-| **Copilot** | n/a | Edge keeps loading for about 30 seconds after the panel first opens; until then the **Open Copilot** button and the header Copilot icon do nothing. After that both open the Copilot pane, also with no active conversation. |
+| **"Open Copilot" button** | n/a | The button on the empty screen does nothing in the current preview. Use the Copilot icon in the widget header. |
 
 **Edge package files in this repo**
 
@@ -275,7 +272,8 @@ salesforce-edge/
 ├── source/                                        ← the same content, unzipped
 ├── screen-pop/                                    ← Apex resolver + container patch: opens the matching Salesforce Contact
 └── examples/
-    └── LightningService_UtilityBar.flexipage-meta.xml   ← utility bar example (replace YOURORG)
+    ├── LightningService_UtilityBar.flexipage-meta.xml   ← utility bar example (replace YOURORG)
+    └── Contact_Edge_Docked.flexipage-meta.xml           ← docked Contact page example
 ```
 
 Deploy the zip with `sf project deploy start --metadata-dir salesforce-edge/D365ContactCenter_Edge_Config_Salesforce.zip --target-org <alias>`, or create the two Trusted Sites by hand in Setup → Trusted URLs.
@@ -611,8 +609,7 @@ The full list is in [docs/4-test-and-troubleshoot.md](docs/4-test-and-troublesho
 | Symptom | Fix |
 |---|---|
 | Pop-up says *"refused to connect"* | Make sure the Trusted URL `D365_Contact_Center` (`https://*.dynamics.com`, frame-src) is **active**: Setup → Trusted URLs. If the **D365 Contact Center panel** (softphone) shows a blocked icon instead, activate `D365_CCaaS_Embed` (`https://ccaas-embed-prod.azureedge.net`). |
-| **Edge widget:** "Open Copilot" (or the header Copilot icon) does nothing | Edge is still loading: it takes about 30 seconds after the panel first opens, even if the inbox already shows. Wait and click again. If there is no Copilot icon at all, set the component's **Layout Preset** to `compact` (the `embedded` preset has none). |
-| **Edge widget:** console error *Creating a worker from 'blob:...' violates the following Content Security Policy directive* | Comes from Microsoft's Edge portal itself (it also appears outside Salesforce). Ignore it unless voice calls fail. |
+| **Edge widget:** the "Open Copilot" button does nothing | Known in the current preview. Click the **Copilot icon in the widget header** instead. If there is no Copilot panel at all, set the component's **Layout Preset** to `compact` (the `embedded` preset has none). |
 | **Edge widget:** blocked icon, or a console error about frames or the microphone | Check the Trusted Sites `D365ContactCenterEdge` and `MicrosoftEntraSignIn` are active, with frame-src and the microphone directive. |
 | **Edge widget:** a call arrives but no Salesforce Contact opens | Install the [screen-pop add-on](salesforce-edge/screen-pop). Without it the widget hands Salesforce a Dynamics 365 ID it cannot open. With it, check the Salesforce Contact's phone or email matches the Dynamics 365 contact's; the call and Case records are created either way. |
 | Pop-up is empty / Play button missing | Fill in **D365 Contact Center Settings** (Step 1.3). |
