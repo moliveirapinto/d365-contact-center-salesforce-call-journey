@@ -163,7 +163,7 @@ Salesforce can show the Dynamics 365 Contact Center panel in two ways. The call 
 | Where it sits | Utility bar (bottom of every page) or docked on a record page | Utility bar only |
 | Copilot panel | Yes (use the layout preset `compact`) | Limited |
 | Native Salesforce click-to-dial | Optional extra step (Open CTI) | Yes |
-| Contact screen pop | Needs a small host component (see [what changes](#what-changes-with-the-edge-widget)) | Built in |
+| Contact screen pop | Needs the small [screen-pop add-on](salesforce-edge/screen-pop) in this repo | Built in |
 
 Use **Option A** for new installs. Use **Option B** if you already run the classic connector or need the built-in screen pop today.
 
@@ -183,7 +183,8 @@ Use **Option A** for new installs. Use **Option B** if you already run the class
 | 2 | **Two Trusted Sites** (Pulse portal with microphone, and Microsoft sign-in) | [`salesforce-edge/D365ContactCenter_Edge_Config_Salesforce.zip`](salesforce-edge) in this repo |
 | 3 | The widget on the **utility bar** (and optionally a **docked** record page) | Setup steps below; ready-made examples in [`salesforce-edge/examples/`](salesforce-edge/examples) |
 | 4 | The **Dynamics 365 side** (voice channel, agents, content security policy) | Same checklist as Option B, STEP 6 of the [classic prompt](#option-b-install-the-classic-salesforce-connector) |
-| 5 | The **call journey** packages | The rest of this README, unchanged |
+| 5 | The **screen-pop add-on** (opens the matching Salesforce Contact when a call is accepted) | [`salesforce-edge/screen-pop/`](salesforce-edge/screen-pop): one Apex class, plus a small patch if you deploy the container from source |
+| 6 | The **call journey** packages | The rest of this README, unchanged |
 
 **The settings that matter**
 
@@ -239,8 +240,11 @@ STEP 6 - FIRST SIGN-IN AND CHECK
 3. IMPORTANT, tell me this: the "Open Copilot" button on the empty "No active conversations" screen does nothing in the current Microsoft preview. To open Copilot, click the Copilot icon in the widget's header (top right).
 4. Troubleshooting: blocked icon or CSP error in the browser console = a Trusted Site is missing or inactive; sign-in pop-up blocked = allow pop-ups for the Salesforce domain; the microphone prompt appears on the first voice call (Allow); a panel with no Copilot at all = Layout Preset is "embedded", change it to "compact".
 
+STEP 6B - CONTACT SCREEN POP (ask me first; skip if I say no)
+Explain: the Edge widget sends the Dynamics 365 customer, not a Salesforce Id, so without this add-on no Salesforce Contact opens when a call is accepted. If I want it: (1) deploy the Apex classes in salesforce-edge/screen-pop/classes (sf project deploy start --source-dir salesforce-edge/screen-pop/classes --target-org <alias>) and give the users access to the class D365ScreenPopResolver; (2) if the d365EdgeContainer component was deployed from source, apply salesforce-edge/screen-pop/container-patch.js to its JavaScript and redeploy it; if it came from Microsoft's package (cannot be edited), tell me to use the package's host API with Screen Pop Mode "publish" as described in Microsoft's INSTALL guide, and stop there. VERIFY with a test Contact whose phone matches a Dynamics 365 contact, per salesforce-edge/screen-pop/README.md.
+
 STEP 7 - FINAL REPORT
-Give me a table: item (package, trusted sites, utility item, Dynamics 365 side, first sign-in) / status (OK, WARNING, FAILED) / what you saw. List what you changed, where the backup is, and how to roll back (restore the saved utility bar, delete the two Trusted Sites, uninstall the package). Then tell me the next step: install the call journey packages ("Let an AI assistant install it for you").
+Give me a table: item (package, trusted sites, utility item, Dynamics 365 side, first sign-in, screen pop) / status (OK, WARNING, FAILED) / what you saw. List what you changed, where the backup is, and how to roll back (restore the saved utility bar, delete the two Trusted Sites, uninstall the package). Then tell me the next step: install the call journey packages ("Let an AI assistant install it for you").
 
 START with STEP 0.
 ````
@@ -255,7 +259,7 @@ Everything the call journey does keeps working: the call records, Case creation,
 
 | Area | Classic connector | Edge widget |
 |---|---|---|
-| **Contact screen pop** | The classic widget searches Salesforce by phone number and opens the matching Contact. | The Edge widget sends the **Dynamics 365** customer record (type and ID), not a Salesforce ID. Salesforce can open a record only if a host component maps it to a Salesforce Contact or Case. Until you add that component, expect no automatic Salesforce pop. |
+| **Contact screen pop** | The classic widget searches Salesforce by phone number and opens the matching Contact. | The Edge widget sends the **Dynamics 365** customer (type and a Dynamics 365 ID), not a Salesforce ID. Install the [screen-pop add-on](salesforce-edge/screen-pop): it reads the customer's phone and email from Dynamics 365, finds the Salesforce Contact or Account (phone, then email, then unique name) and opens it. Tested with a simulated call event in a Developer Edition org. With Microsoft's package you wire it through the host API; with a source-deployed container you apply a small patch. |
 | **Click-to-dial** | Works out of the box. | Native phone fields say "click to dial disabled" until you complete the optional Open CTI step in Microsoft's guide. |
 | **Panel size** | The CTI panel enlarger extra resizes it. | The enlarger does nothing; size comes from the utility item (1000 × 800). |
 | **"Open Copilot" button** | n/a | The button on the empty screen does nothing in the current preview. Use the Copilot icon in the widget header. |
@@ -266,6 +270,7 @@ Everything the call journey does keeps working: the call records, Case creation,
 salesforce-edge/
 ├── D365ContactCenter_Edge_Config_Salesforce.zip   ← deploy: the two Trusted Sites (Salesforce metadata API format)
 ├── source/                                        ← the same content, unzipped
+├── screen-pop/                                    ← Apex resolver + container patch: opens the matching Salesforce Contact
 └── examples/
     ├── LightningService_UtilityBar.flexipage-meta.xml   ← utility bar example (replace YOURORG)
     └── Contact_Edge_Docked.flexipage-meta.xml           ← docked Contact page example
@@ -606,7 +611,7 @@ The full list is in [docs/4-test-and-troubleshoot.md](docs/4-test-and-troublesho
 | Pop-up says *"refused to connect"* | Make sure the Trusted URL `D365_Contact_Center` (`https://*.dynamics.com`, frame-src) is **active**: Setup → Trusted URLs. If the **D365 Contact Center panel** (softphone) shows a blocked icon instead, activate `D365_CCaaS_Embed` (`https://ccaas-embed-prod.azureedge.net`). |
 | **Edge widget:** the "Open Copilot" button does nothing | Known in the current preview. Click the **Copilot icon in the widget header** instead. If there is no Copilot panel at all, set the component's **Layout Preset** to `compact` (the `embedded` preset has none). |
 | **Edge widget:** blocked icon, or a console error about frames or the microphone | Check the Trusted Sites `D365ContactCenterEdge` and `MicrosoftEntraSignIn` are active, with frame-src and the microphone directive. |
-| **Edge widget:** a call arrives but no Salesforce Contact opens | Expected until you add a host component that maps the Dynamics 365 customer to a Salesforce Contact (see [What changes with the Edge widget](#what-changes-with-the-edge-widget)). The call and Case records are still created. |
+| **Edge widget:** a call arrives but no Salesforce Contact opens | Install the [screen-pop add-on](salesforce-edge/screen-pop). Without it the widget hands Salesforce a Dynamics 365 ID it cannot open. With it, check the Salesforce Contact's phone or email matches the Dynamics 365 contact's; the call and Case records are created either way. |
 | Pop-up is empty / Play button missing | Fill in **D365 Contact Center Settings** (Step 1.3). |
 | *"Error loading control"* in the Evaluation pane, or an empty Transcript tab in the pop-up | Add the Conversation form fix (Step 2.3). |
 | No call record created | The Case has no `D365 Conversation ID`: check Step 3. Also check the running user has the permission set. |
