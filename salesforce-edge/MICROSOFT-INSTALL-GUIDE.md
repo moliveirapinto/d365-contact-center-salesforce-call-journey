@@ -2,6 +2,12 @@
 
 > For Salesforce administrators installing the D365 Contact Center agent desktop widget.
 
+> **Read this first: the install URL below is a template, not a working link.**
+> `04tXXXXXXXXXXXXXXX` is a placeholder, not a shortened ID, and the copy button copies the placeholder as it is.
+> The real package version ID (`04t` followed by 15 more characters, 18 in total) is **not published**: your Microsoft representative gives it to you.
+> Ask for **"the current D365ContactCenter install URL for a Developer Edition org or sandbox."**
+> Paste their ID in place of `04tXXXXXXXXXXXXXXX`, or open the full link they sent you.
+
 ## Package availability
 
 As of **2026-06-10**, CELA has cleared the Salesforce distribution path:
@@ -9,7 +15,7 @@ As of **2026-06-10**, CELA has cleared the Salesforce distribution path:
 from a Microsoft-owned Salesforce account.
 
 - Use only the current install URL provided by your Microsoft representative.
-  It contains a `04t...` package version ID generated from the Microsoft-owned
+  It contains a `04t…` package version ID (18 characters) generated from the Microsoft-owned
   Salesforce account.
 - Do **not** use any install URL shared before **2026-05-21**. The earlier
   personal-Dev-Hub package was deleted and those links return
@@ -29,9 +35,9 @@ from a Microsoft-owned Salesforce account.
 
 ## Step 1: Install the Package
 
-1. Open the install URL in your browser:
+1. Open the install URL in your browser. Replace `04tXXXXXXXXXXXXXXX` with the package version ID from your Microsoft representative (or just open the full link they sent you):
    ```
-   https://login.salesforce.com/packaging/installPackage.apexp?p0=04t...
+   https://login.salesforce.com/packaging/installPackage.apexp?p0=04tXXXXXXXXXXXXXXX
    ```
    For sandbox installs, replace `login.salesforce.com` with `test.salesforce.com`.
 2. Log in to your Salesforce org (if not already logged in).
