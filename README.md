@@ -286,7 +286,7 @@ README (source of truth): https://raw.githubusercontent.com/moliveirapinto/d365-
 Step guides: docs/1-install-salesforce.md, docs/2-install-dynamics365.md, docs/3-configure-copilot-studio.md, docs/4-test-and-troubleshoot.md (same repository, main branch).
 Files:
   A) Salesforce package (do NOT unzip): https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/salesforce/D365ContactCenter_CallJourney_Salesforce.zip
-  B) Dynamics 365 solution (do NOT unzip): https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/dynamics365/D365ContactCenterSalesforceCallJourney_1_1_0_0.zip
+  B) Dynamics 365 solution (do NOT unzip): https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/dynamics365/D365ContactCenterSalesforceCallJourney_1_1_1_0.zip
   C) Copilot Studio topic: https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/copilot-studio/d365-context-variables-topic.yaml
 Read the README and the four step guides first. If they and this prompt disagree, follow the repository and tell me.
 
@@ -310,7 +310,7 @@ PHASE 0 - QUESTIONS (ask all in one message, then wait)
 8. Confirm I can sign in to: (a) Salesforce as a System Administrator, (b) Power Apps with System Administrator or System Customizer in the Contact Center environment, (c) Copilot Studio as a maker of the IVR agent. Also confirm the Dynamics 365 Contact Center widget (CTI) already works inside the Salesforce console, and that Contact Center has a voice channel.
 
 PHASE 1 - PREFLIGHT
-1. Download files A, B and C. Expected sizes: A 24,975 bytes, B 13,418 bytes (different only if the README names newer files). A must be a valid zip whose first entry is package.xml; B a valid zip containing solution.xml, customizations.xml, a Workflows/*.json file and a WebResources/ file.
+1. Download files A, B and C. Expected sizes: A 24,975 bytes, B 13,614 bytes (different only if the README names newer files). A must be a valid zip whose first entry is package.xml; B a valid zip containing solution.xml, customizations.xml, a Workflows/*.json file and a WebResources/ file.
 2. Salesforce, once I have signed in: check that the object Contact_Center_Call__c and the field Case.D365_Conversation_Id__c do NOT exist yet. Check the field with the Tooling API, not with "sf sobject describe" (describe hides fields the user has no permission for): sf data query --use-tooling-api -q "SELECT DeveloperName FROM CustomField WHERE EntityDefinition.QualifiedApiName='Case' AND DeveloperName LIKE 'D365%'". If they exist, an earlier version may be installed: STOP, tell me, and ask whether to upgrade over it.
 3. Power Apps, once signed in to the right environment: confirm it has the table "Conversation" (logical name msdyn_ocliveworkitem). If not, STOP. Check whether the solution "D365 Contact Center - Salesforce Call Journey" (unique name D365ContactCenterSalesforceCallJourney) already exists; if it does, tell me its version and ask before importing over it.
 
@@ -423,7 +423,7 @@ Give me a table with every phase and its result, then: (1) anything I still have
 │   ├── D365ContactCenter_CallJourney_Salesforce.zip   ← install this in Salesforce (Step 1)
 │   └── source/                                        ← the same content, unzipped (for reading / version control)
 ├── dynamics365/
-│   ├── D365ContactCenterSalesforceCallJourney_1_1_0_0.zip  ← import this in Dynamics 365 (Step 2)
+│   ├── D365ContactCenterSalesforceCallJourney_1_1_1_0.zip  ← import this in Dynamics 365 (Step 2)
 │   └── webresource-source/new_d365cc_evaluationpanefix.js  ← readable copy of the Conversation form fix script
 ├── copilot-studio/
 │   ├── d365-context-variables-topic.yaml              ← paste into a new topic (Step 3)
@@ -482,6 +482,7 @@ The full list is in [docs/4-test-and-troubleshoot.md](docs/4-test-and-troublesho
 | *"Error loading control"* in the Evaluation pane, or an empty Transcript tab in the pop-up | Add the Conversation form fix (Step 2.3). |
 | No call record created | The Case has no `D365 Conversation ID`: check Step 3. Also check the running user has the permission set. |
 | Call record never shows metrics / quality | The sync flow is off or its Salesforce connection user lacks the permission set (Step 2.2). |
+| A very short call (under a minute) has no metrics | Fixed in solution 1.1.1.0: the sync flow retries once after a minute, in case the call record was not created yet. Import 1.1.1.0 over your version. |
 | D365 pages stuck on the loading spinner (often right after publishing customizations) | Clear the site data for `*.crm.dynamics.com` (keeps you signed in if you keep cookies) and reload. |
 | Pop-up blocked by *"frame-ancestors"* | Your Dynamics 365 environment enforces a content security policy. In the Power Platform admin center, add your Salesforce domains (`https://*.lightning.force.com`, `https://*.my.salesforce.com`) to its allowed frame ancestors. |
 

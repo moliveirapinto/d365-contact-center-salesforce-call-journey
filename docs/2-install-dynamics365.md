@@ -8,7 +8,7 @@ You'll import **one zip file** into Dynamics 365, turn on one flow, and add one 
 
 ## 2.1 Import the solution
 
-1. Download **[`dynamics365/D365ContactCenterSalesforceCallJourney_1_1_0_0.zip`](../dynamics365/D365ContactCenterSalesforceCallJourney_1_1_0_0.zip)** (GitHub → **Download raw file**). Don't unzip it.
+1. Download **[`dynamics365/D365ContactCenterSalesforceCallJourney_1_1_1_0.zip`](../dynamics365/D365ContactCenterSalesforceCallJourney_1_1_1_0.zip)** (GitHub → **Download raw file**). Don't unzip it.
 2. Go to **https://make.powerapps.com** and pick your **Contact Center environment** (top-right environment picker).
 3. Left menu → **Solutions** → **Import solution** → **Browse** → pick the zip → **Next**.
 4. You'll see **Connections** for two connection references:

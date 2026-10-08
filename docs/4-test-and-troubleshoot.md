@@ -43,7 +43,7 @@
 | Microsoft sign-in page inside the pop-up | Sign in to Dynamics 365 once in another browser tab, then reopen the pop-up. |
 | Browser console shows *"Refused to frame … frame-ancestors"* | Your Dynamics 365 environment enforces a content security policy. In the Power Platform admin center → your environment → **Settings** → **Privacy + Security** → **Content security policy**, add `https://*.lightning.force.com` and `https://*.my.salesforce.com` to the allowed frame ancestors for model-driven apps. |
 | **"Error loading control"** in the evaluation pane | Step 2.3 wasn't done or wasn't published. Also try a hard refresh (Ctrl+F5). |
-| **Transcript tab is blank** in the pop-up (but works when opened directly in D365) | Step 2.3 wasn't done, or you're on solution 1.0.0.0: import 1.1.0.0. Right after publishing, D365 may still use the old script for one load: reload the pop-up (or clear site data for `*.crm.dynamics.com`, keeping cookies). |
+| **Transcript tab is blank** in the pop-up (but works when opened directly in D365) | Step 2.3 wasn't done, or you're on solution 1.0.0.0: import 1.1.1.0 (or newer). Right after publishing, D365 may still use the old script for one load: reload the pop-up (or clear site data for `*.crm.dynamics.com`, keeping cookies). |
 
 ### The call title shows the wrong time
 
