@@ -271,7 +271,7 @@ START with STEP 0.
 
 ## Let an AI assistant install it for you
 
-This is the third step, after you have a Salesforce org and the Dynamics 365 panel works inside the Service Console (see the two sections above). Copy the whole prompt below into an AI assistant that can work in a browser and/or run commands (for example **Claude** with computer or browser use, **Claude Code**, or a similar agent). It asks you a few questions, installs everything in the right order (Salesforce, Dynamics 365, Copilot Studio), checks each step and finishes with a test call. If your assistant cannot operate a browser, the prompt switches to a guided mode where it walks you through each click.
+You do not need a Salesforce org first: if you have none, the assistant creates a free Developer Edition with you (PHASE 0B). Copy the whole prompt below into an AI assistant that can work in a browser and/or run commands (for example **Claude** with computer or browser use, **Claude Code**, or a similar agent). It asks you a few questions, installs everything in the right order (Salesforce, Dynamics 365, Copilot Studio), checks each step and finishes with a test call. If your assistant cannot operate a browser, the prompt switches to a guided mode where it walks you through each click.
 
 **You stay in control:** you sign in yourself (including MFA), and the assistant stops and asks whenever something is not as expected or before anything that affects live calls.
 
@@ -300,7 +300,7 @@ HOW TO WORK
 - After each phase give me one or two lines of status (OK / WARNING / FAILED) before you continue.
 
 PHASE 0 - QUESTIONS (ask all in one message, then wait)
-1. Salesforce: sandbox or production? Which org (alias or login URL) and which admin username? If it is production, warn me and continue only after I answer an explicit "yes, production". A sandbox is recommended for a first try.
+1. Salesforce: do I already have an org? If not, say "I don't have one yet" and you create a free Developer Edition for me in PHASE 0B. Otherwise: sandbox or production? Which org (alias or login URL) and which admin username? If it is production, warn me and continue only after I answer an explicit "yes, production". A sandbox is recommended for a first try.
 2. Dynamics 365: the Contact Center environment URL (for example https://contoso.crm.dynamics.com) and the environment's name as shown in Power Apps.
 3. Time zone for call titles, as three values: standard-time offset from UTC in hours (for example -5), daylight saving rule (US, EU, or blank if none) and a short label (for example ET). Common values: US Eastern -5/US/ET; US Central -6/US/CT; US Mountain -7/US/MT; US Pacific -8/US/PT; Brazil -3/blank/BRT; UK and Ireland 0/EU/GMT; Central Europe 1/EU/CET; India 5.5/blank/IST; Sydney 10/blank/AEST. Blank for all three means UTC.
 4. Salesforce users who need the permission set "D365 Contact Center Call Access": (a) every agent who uses the Salesforce console, (b) the Salesforce user the Copilot Studio agent uses to create Cases, (c) the Salesforce user for the Power Automate connection (often an integration user). Give me usernames.
@@ -308,6 +308,13 @@ PHASE 0 - QUESTIONS (ask all in one message, then wait)
 6. Which Dataverse security roles do the agents have (for example Omnichannel agent, Customer Service Representative, Quality Manager)? The Contact Center Call Review app will be shared with them.
 7. Optional Case extras, yes or no each: (a) "Call Recording & Transcript" link in the Case header (compact layout), (b) a Contact Center Calls related list on Case and Contact, (c) the Call Timeline component on the Case page.
 8. Confirm I can sign in to: (a) Salesforce as a System Administrator, (b) Power Apps with System Administrator or System Customizer in the Contact Center environment, (c) Copilot Studio as a maker of the IVR agent. Also confirm the Dynamics 365 Contact Center widget (CTI) already works inside the Salesforce console, and that Contact Center has a voice channel.
+
+PHASE 0B - CREATE A FREE SALESFORCE DEVELOPER EDITION ORG (only if I have no org; otherwise skip)
+1. Open https://developer.salesforce.com/signup in the browser. If the page has moved, search for "Salesforce Developer Edition sign up". No credit card is needed; if one is requested, STOP and tell me.
+2. Fill in the form with my first and last name, my e-mail, a role, my company and country. For Username use an e-mail-style name that is unique across all of Salesforce (it does not need to be a real mailbox), for example <myname>.d365test@example.com; if it is taken, add digits. Tell me the username you chose. Any Developer Edition offered works (including ones with Agentforce).
+3. Accept the terms and submit. I handle the captcha, the verification e-mail ("Verify Account", check spam), choosing the password and security question, and any identity-confirmation code. Tell me exactly when you need each one, then wait. Never ask me to paste a password or code into this chat.
+4. I land in the new org as System Administrator. Note the org address (for example https://orgfarm-xxxxxxxx-dev-ed.develop.lightning.my.salesforce.com). The login URL is https://login.salesforce.com. Treat it as a Developer Edition org (not a sandbox).
+5. Check the app launcher (nine dots) for "Service Console"; if missing, Setup > App Manager must list it. Tell me the org is for testing only (no real customer data) and that Salesforce may delete an unused Developer Edition org.
 
 PHASE 1 - PREFLIGHT
 1. Download files A, B and C. Expected sizes: A 24,975 bytes, B 13,614 bytes (different only if the README names newer files). A must be a valid zip whose first entry is package.xml; B a valid zip containing solution.xml, customizations.xml, a Workflows/*.json file and a WebResources/ file.
