@@ -29,7 +29,7 @@
 | Check | How |
 |---|---|
 | Sync flow is **On** | make.powerapps.com → Solutions → *D365 Contact Center - Salesforce Call Journey* → Cloud flows. |
-| Look at its **run history** | Open the flow → *28-day run history*. A run ending in **No_Salesforce_case_for_this_call** is normal for calls that didn't come through the IVR. |
+| Look at its **run history** | Open the flow → *28-day run history*. As of solution 1.2.0.0, **outbound** calls create their own call record (see [dynamics365/README.md](../dynamics365/README.md#outbound-calls-120)) instead of ending in **No_Salesforce_case_for_this_call** — that outcome should now only happen for an inbound call whose Case never got a D365 Conversation ID. |
 | Salesforce connection user | Must have the **D365 Contact Center Call Access** permission set. |
 | Quality score empty | Quality evaluation must be enabled in D365 Contact Center, and the evaluation must exist when the call closes. Evaluations created later are not re-synced. |
 
@@ -51,7 +51,9 @@ The title is set once, when the call record is created, using **D365 Contact Cen
 
 ### The call has no Customer (Contact)
 
-The call record copies the **Contact** from the Case. If your IVR doesn't set a Contact on the Case (for example, it doesn't look the caller up), the call's *Customer* stays empty. Everything else still works. See [Step 3](3-configure-copilot-studio.md#optional-link-the-caller-to-a-contact).
+**Inbound:** the call record copies the **Contact** from the Case. If your IVR doesn't set a Contact on the Case (for example, it doesn't look the caller up), the call's *Customer* stays empty. Everything else still works. See [Step 3](3-configure-copilot-studio.md#optional-link-the-caller-to-a-contact).
+
+**Outbound (1.2.0.0+):** there's no Case to copy from, so the sync flow instead matches the **dialed number** against Salesforce Contact `Phone`/`MobilePhone` (last 10 digits). The *Customer* stays empty if no Contact's phone number ends in the same 10 digits as the dialed number — check the Contact's phone field formatting (works best as E.164, e.g. `+14165551234`).
 
 ### Dynamics 365 is stuck on the loading spinner (widget or pop-up)
 
