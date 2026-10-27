@@ -286,7 +286,7 @@ README (source of truth): https://raw.githubusercontent.com/moliveirapinto/d365-
 Step guides: docs/1-install-salesforce.md, docs/2-install-dynamics365.md, docs/3-configure-copilot-studio.md, docs/4-test-and-troubleshoot.md (same repository, main branch).
 Files:
   A) Salesforce package (do NOT unzip): https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/salesforce/D365ContactCenter_CallJourney_Salesforce.zip
-  B) Dynamics 365 solution (do NOT unzip): https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/dynamics365/D365ContactCenterSalesforceCallJourney_1_2_0_0.zip
+  B) Dynamics 365 solution (do NOT unzip): https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/dynamics365/D365ContactCenterSalesforceCallJourney_1_3_0_0.zip
   C) Copilot Studio topic: https://raw.githubusercontent.com/moliveirapinto/d365-contact-center-salesforce-call-journey/main/copilot-studio/d365-context-variables-topic.yaml
 Read the README and the four step guides first. If they and this prompt disagree, follow the repository and tell me.
 
@@ -430,7 +430,7 @@ Give me a table with every phase and its result, then: (1) anything I still have
 │   ├── D365ContactCenter_CallJourney_Salesforce.zip   ← install this in Salesforce (Step 1)
 │   └── source/                                        ← the same content, unzipped (for reading / version control)
 ├── dynamics365/
-│   ├── D365ContactCenterSalesforceCallJourney_1_2_0_0.zip  ← import this in Dynamics 365 (Step 2)
+│   ├── D365ContactCenterSalesforceCallJourney_1_3_0_0.zip  ← import this in Dynamics 365 (Step 2)
 │   └── webresource-source/new_d365cc_evaluationpanefix.js  ← readable copy of the Conversation form fix script
 ├── copilot-studio/
 │   ├── d365-context-variables-topic.yaml              ← paste into a new topic (Step 3)

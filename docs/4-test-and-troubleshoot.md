@@ -29,7 +29,7 @@
 | Check | How |
 |---|---|
 | Sync flow is **On** | make.powerapps.com → Solutions → *D365 Contact Center - Salesforce Call Journey* → Cloud flows. |
-| Look at its **run history** | Open the flow → *28-day run history*. As of solution 1.2.0.0, **outbound** calls create their own call record (see [dynamics365/README.md](../dynamics365/README.md#outbound-calls-120)) instead of ending in **No_Salesforce_case_for_this_call** — that outcome should now only happen for an inbound call whose Case never got a D365 Conversation ID. |
+| Look at its **run history** | Open the flow → *28-day run history*. As of solution 1.2.0.0+ (fixed in 1.3.0.0), **outbound** calls branch early on `msdyn_isoutbound` and create/update their own call record (see [dynamics365/README.md](../dynamics365/README.md#outbound-calls-120)) instead of ending in **No_Salesforce_case_for_this_call** — that outcome should now only happen for an inbound call whose Case never got a D365 Conversation ID. |
 | Salesforce connection user | Must have the **D365 Contact Center Call Access** permission set. |
 | Quality score empty | Quality evaluation must be enabled in D365 Contact Center, and the evaluation must exist when the call closes. Evaluations created later are not re-synced. |
 
